@@ -10,17 +10,20 @@ window.exports.viewer = (function () {
     if (obj.error) {
       str = "ERROR: " + obj.error;
     } else {
-      obj.data.forEach(function(element, index, array){
-        if(typeof element === "object" && element){
-          if(element.goal && element.current){
-            goal = goal.concat(element.goal);
-            current = current.concat(element.current);
+      if(typeof obj.data === "array"){
+        obj.data.forEach(function(element, index, array){
+          if(typeof element === "object" && element){
+            if(element.goal && element.current){
+              goal = goal.concat(element.goal);
+              current = current.concat(element.current);
+            }
+          } else {//if it isn't an object add it to this new array
+            ob = ob.concat(element);
           }
-        } else {//if it isn't an object add it to this new array
-          ob = ob.concat(element);
-        }
-      });
-      str = ob;
+        });
+        obj = ob;
+      }
+      str = obj;
     }
     var text =
       "<text x='4' y='20'>" +
