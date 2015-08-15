@@ -60,6 +60,63 @@ let translate = function() {
       });
     });
   };
+  function mul(node, options, resume) {
+    visit(node.elts[0], options, function (err, v1) {
+      visit(node.elts[1], options, function (err, v2) {
+        let val = +v1 * +v2;
+        if (isNaN(val)) {
+          console.log("mul() val=" + val);
+          resume("NaN", null);
+        } else {
+          resume(null, val);
+        }
+      });
+    });
+  };
+  function addD(node, options, resume) {
+    add(node, options, function(err, val){
+      if (isNaN(val)) {
+        resume("NaN", null);
+      } else {
+        val = Math.round(val*100) / 100;
+        resume(null, val);
+      }
+   });
+  };
+  function mulD(node, options, resume) {
+    mul(node, options, function(err, val){
+      if (isNaN(val)) {
+        resume("NaN", null);
+      } else {
+        val = Math.round(val*100) / 100;
+        resume(null, val);
+      }
+   });
+  };
+  function current(node, options, resume) {
+    visit(node.elts[0], options, function (err, val) {
+      if(isNaN(val)){
+        resume("Current is NaN", null);
+      } else {
+        let value = {current: (Math.round(val*100) / 100)}
+        resume(null, value);
+      }
+    });
+  }
+  function goal(node, options, resume) {
+    visit(node.elts[0], options, function (err, v1) {
+      visit(node.elts[1], options, function (err, v2) {
+        if(isNaN(v2)){
+          resume("Goal is NaN", null);
+        } else if(typeof v1 !== "object" || !v1) {
+          resume("Valid Current value not given", null);
+        } else {
+          v1.goal = Math.round(v2*100) / 100;
+          resume(null, v1);
+        }
+      });
+    });
+  }  
   function list(node, options, resume) {
     visit(node.elts[0], options, function (err, val) {
       if (!(val instanceof Array)) {
@@ -76,11 +133,16 @@ let translate = function() {
   }
   function exprs(node, options, resume) {
     if (node.elts && node.elts.length) {
-      visit(node.elts[0], options, function (err, val) {
+      visit(node.elts[0], options, function (error, val) {
         node.elts.shift();
         exprs(node, options, function (err, data) {
           data.unshift(val);
-          resume(err, data);
+          if(err && error){//if neither is null we add them
+            err = error + ", " + err;
+          } else if(error){//if err is null we use error
+            err = error;
+          }//otherwise we use err, null or not
+          resume (err, data);
         });
       });
     } else {
@@ -96,6 +158,11 @@ let translate = function() {
     "BOOL": bool,
     "LIST" : list,
     "ADD" : add,
+    "MUL" : mul,
+    "ADDD" : addD,
+    "MULD" : mulD,
+    "GOAL" : goal,
+    "CURRENT" : current,
   }
   return translate;
 }();
@@ -127,7 +194,7 @@ export let compiler = function () {
           resume(err, data);
         } else {
           render(data, function (err, data) {
-            console.log("render err=" + err + " data=" + JSON.stringify(data, null, 2));
+            console.log("render " + "data=" + JSON.stringify(data, null, 2));
             resume(err, data);
           });
         }

@@ -1,5 +1,5 @@
 {
-  "name": "L000",
+  "name": "L201",
   "version": "0.0.0",
   "description": "Compiler as a service.",
   "author": "Art Compiler LLC",
@@ -9,7 +9,8 @@
   },
   "dependencies": {
     "express": "^4.0.x",
-    "domready": "^1.0.8"
+    "domready": "^1.0.8",
+    "d3": "^3.5.6"
   },
   "engines": {
     "npm": "latest",
