@@ -7,22 +7,23 @@ window.exports.viewer = (function () {
     var current = [];
     var ob = [];
     obj = JSON.parse(obj);
+    if(!(obj.data instanceof(Array))){
+      obj.data = [obj.data];//has just one element
+    }
     if (obj.error) {
       str = "ERROR: " + obj.error;
     } else {
-      if(obj.data instanceof(Array)){
-        obj.data.forEach(function(element, index, array){
-          if(typeof element === "object" && element){
-            if(element.goal && element.current){
-              goal = goal.concat(element.goal);
-              current = current.concat(element.current);
-            }
-          } else {//if it isn't an object add it to this new array
-            ob = ob.concat(element);
+      obj.data.forEach(function(element, index, array){
+        if(typeof element === "object" && element){
+          if(element.goal && element.current){
+            goal = goal.concat(element.goal);
+            current = current.concat(element.current);
           }
-        });
-        obj = ob;
-      }
+        } else {//if it isn't an object add it to this new array
+          ob = ob.concat(element);
+        }
+      });
+      obj = ob;
       str = obj;
     }
     var text =
