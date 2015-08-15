@@ -10,7 +10,7 @@ window.exports.viewer = (function () {
     if (obj.error) {
       str = "ERROR: " + obj.error;
     } else {
-      if(typeof obj.data === "array"){
+      if(obj.data instanceof(Array)){
         obj.data.forEach(function(element, index, array){
           if(typeof element === "object" && element){
             if(element.goal && element.current){
