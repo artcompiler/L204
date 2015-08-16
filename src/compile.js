@@ -117,9 +117,9 @@ let translate = (function() {
         if(isNaN(val2)){
           err2 = err2.concat(error("Argument must be a number.", node.elts[1]));
         }
-        if(typeof val1 !== "object" || !val1){
+        if(typeof val1 === "object" && val1){
           val1.goal = Math.round(val2*100) / 100;//the code will crash hard if it isn't
-          val1.progress = "%" + ((val1.current/val1.goal)*100);
+          val1.progress = ((val1.current/val1.goal)*100)+'%';
         }
         resume([].concat(err1).concat(err2), val1);
       });
@@ -195,7 +195,7 @@ export let compiler = (function () {
         if (err.length) {
           resume(err, val);
         } else {
-          render(data, function (err, val) {
+          render(val, function (err, val) {
             console.log("render err=" + JSON.stringify(err, null, 2) + "\nval=" + JSON.stringify(val, null, 2));
             resume(err, val);
           });

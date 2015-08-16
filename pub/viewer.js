@@ -17,11 +17,11 @@ window.exports.viewer = (function () {
           if(element.goal && element.current && element.progress){
             goal = goal.concat(element.goal);
             current = current.concat(element.current);
-            element = element.progress;//string so it isn't empty
+            obj.data[index] = element.progress;//string so it isn't empty
           }//if these don't happen AND no error was caught previously it's out of my hands.
         }//that, or it's a different object that will be added later that needs it's own statement.
       });
-      str = obj;
+      str = obj.data;
     }
     var text =
       "<text x='4' y='20'>" +
