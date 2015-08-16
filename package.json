@@ -5,7 +5,7 @@
   "author": "Art Compiler LLC",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node --harmony index.js"
   },
   "dependencies": {
     "express": "^4.0.x",
@@ -18,7 +18,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/artcompiler/L000"
+    "url": "https://github.com/artcompiler/L201"
   },
   "devDependencies": {
     "babel": "^5.8.21"

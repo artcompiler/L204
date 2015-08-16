@@ -5,7 +5,6 @@ window.exports.viewer = (function () {
   function update(el, obj, src, pool) {
     var goal = [];
     var current = [];
-    var ob = [];
     obj = JSON.parse(obj);
     if(!(obj.data instanceof(Array))){
       obj.data = [obj.data];//has just one element
@@ -15,15 +14,13 @@ window.exports.viewer = (function () {
     } else {
       obj.data.forEach(function(element, index, array){
         if(typeof element === "object" && element){
-          if(element.goal && element.current){
+          if(element.goal && element.current && element.progress){
             goal = goal.concat(element.goal);
             current = current.concat(element.current);
-          }
-        } else {//if it isn't an object add it to this new array
-          ob = ob.concat(element);
-        }
+            element = element.progress;//string so it isn't empty
+          }//if these don't happen AND no error was caught previously it's out of my hands.
+        }//that, or it's a different object that will be added later that needs it's own statement.
       });
-      obj = ob;
       str = obj;
     }
     var text =
