@@ -83,18 +83,12 @@ let translate = (function() {
   function addD(node, options, resume) {
     add(node, options, function(err, val){
       val = +val;
-      if (isNaN(val)) {
-        err = err.concat(error("Argument must be a number.", node));
-      }
       resume([].concat(err), (Math.round(val*100) / 100));
    });
   };
   function mulD(node, options, resume) {
     mul(node, options, function(err, val){
       val = +val;
-      if (isNaN(val)) {
-        err = err.concat(error("Argument must be a number.", node));
-      }
       resume([].concat(err), (Math.round(val*100) / 100));
    });
   };
@@ -104,14 +98,14 @@ let translate = (function() {
       if(isNaN(val)){
         err = err.concat(error("Argument must be a number.", node.elts[0]));
       }
-      let value = {current: (Math.round(val*100) / 100)}
+      let value = {current: (Math.round(val*100) / 100)};
       resume([].concat(err), value);
     });
   }
   function goal(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
       if(typeof val1 !== "object" || !val1){
-        err1 = err1.concat(error("Current is invalid.", node.elts[0]));
+        err1 = err1.concat(error("Argument Current invalid.", node.elts[0]));
       }
       visit(node.elts[1], options, function (err2, val2) {
         if(isNaN(val2)){
@@ -124,7 +118,31 @@ let translate = (function() {
         resume([].concat(err1).concat(err2), val1);
       });
     });
-  }  
+  }
+  function bar(node, options, resume){
+    visit(node.elts[0], options, function (err, val) {
+      if(typeof val !== "object" || !val){
+        err = err.concat(error("Argument Goal invalid.", node.elts[0]));
+      } else if(!val.goal || !val.current){
+        err = err.concat(error("Argument Goal missing parameters.", node.elts[0]));
+      } else {//IS an object, ISN'T null, DOES have goal and current
+        val.graphtype = "bar";
+      }
+      resume([].concat(err), val);
+    });
+  }
+  function radial(node, options, resume){
+    visit(node.elts[0], options, function (err, val) {
+      if(typeof val !== "object" || !val){
+        err = err.concat(error("Argument Goal invalid.", node.elts[0]));
+      } else if(!val.goal || !val.current){
+        err = err.concat(error("Argument Goal missing parameters.", node.elts[0]));
+      } else {//IS an object, ISN'T null, DOES have goal and current
+        val.graphtype = "rad";
+      }
+      resume([].concat(err), val);
+    });
+  }
   function list(node, options, resume) {
     visit(node.elts[0], options, function (err, val) {
       if (!(val instanceof Array)) {
@@ -166,6 +184,8 @@ let translate = (function() {
     "MULD" : mulD,
     "GOAL" : goal,
     "CURRENT" : current,
+    "BAR" : bar,
+    "RADIAL" : radial,
   }
   return translate;
 })();

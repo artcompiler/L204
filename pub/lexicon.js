@@ -14,4 +14,6 @@ exports.globalLexicon = {
     "mulD" : { "tk": 0x01, "name": "MULD", "cls": "function", "length": 2 , "arity": 2 },
     "goal" : { "tk": 0x01, "name": "GOAL", "cls": "function", "length": 2 , "arity": 2 },
     "current" : { "tk": 0x01, "name": "CURRENT", "cls": "function", "length": 1 , "arity": 1 },
+    "bar" : { "tk": 0x01, "name": "BAR", "cls": "function", "length": 1, "arity": 1},
+    "radial" : { "tk": 0x01, "name": "RADIAL", "cls": "function", "length": 1, "arity": 1},
 }
