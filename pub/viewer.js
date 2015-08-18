@@ -34,26 +34,59 @@ window.exports.viewer = (function () {
       });
       str = obj.data;
     }
-    var text =
-      "<text x='4' y='20'>" +
-      "<tspan font-size='14' font-weight='600'>" + str + "</tspan> " +
-      "</text>";
-    var bar = "";
+    var y = 20;
+    var svgd = d3.select(el);
+    svgd.selectAll("g")
+      .remove();
+    svgd.append("g")
+      .append("text")
+      .attr("x", 4)
+      .attr("y", y)
+      .text(str)
+      .style("font-size", 14+"px")
+      .style("font-weight", 600);
+    var bar = svgd.append("g");
+    y -= 6;
     for(var counter = 0; counter < bars.goal.length; counter++){
-      bar = bar + "<rect x='4' y='"+ (24+10*counter) +"' width='" + bars.goal[counter] + "' height='10' fill='black'/>" +
-      "<rect x='4' y='"+ (24+10*counter) +"' width='" + bars.current[counter] + "' height='10' fill='green'/>";
+      y += 10;
+      bar.append("rect")
+        .attr("x", 4)
+        .attr("y", y)
+        .attr("width", bars.goal[counter])
+        .attr("height", 10)
+        .attr("fill", 'black');
+      bar.append("rect")
+        .attr("x", 4)
+        .attr("y", y)
+        .attr("width", bars.current[counter])
+        .attr("height", 10)
+        .attr("fill", 'green');
     }
-    var bs = counter;
-    var rad = "";
+    var rad = svgd.append("g");
+    var inr = 30;
+    var arctest = d3.svg.arc()
+      .innerRadius(10)
+      .outerRadius(inr)
+      .startAngle(0 * (Math.PI/180))
+      .endAngle(360 * (Math.PI/180));
     for (counter = 0; counter < rads.goal.length; counter++){
-      //remember to add bs for purposes of the y coordinates to keep things from overlapping.
-      rad = rad;
+      arctest.endAngle(360 * (Math.PI/180));
+      rad.append("path")
+        .attr("transform", "translate(" + (inr+4+(2*inr*counter)) + "," + (inr+y+12) + ")")
+        .attr("d", arctest)
+        .attr("fill", 'grey');
+      arctest.endAngle((360 * (Math.PI/180))*(rads.current[counter]/rads.goal[counter]));
+      rad.append("path")
+        .attr("transform", "translate(" + (inr+4+(2*inr*counter)) + "," + (inr+y+12) + ")")
+        .attr("d", arctest)
+        .attr("fill", 'green');
     }
-    $(el).html('<g>' + bar + '</g>' + '<g>' + text + '</g>');
+    var checkth = $("#graff-view svg g");
     var bbox = $("#graff-view svg g")[0].getBBox();
     var bbox1 = $("#graff-view svg g")[1].getBBox();
-    $(el).attr("height", (bbox.height + bbox1.height + 12) + "px");
-    $(el).attr("width", (bbox.width + bbox1.width + 10) + "px");
+    var bbox2 = $("#graff-view svg g")[2].getBBox();
+    $(el).attr("height", (bbox.height + bbox1.height + bbox2.height + 12) + "px");
+    $(el).attr("width", (bbox.width + bbox1.width + bbox2.width + 10) + "px");
   }
   function capture(el) {
     var mySVG = $(el).html();
