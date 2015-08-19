@@ -7,13 +7,15 @@ window.exports.viewer = (function () {
       goal: [],
       current: [],
       graphsize: [],
-      graphcolor: []
+      graphcolor: [],
+      transition: []
     };
     var rads = {
       goal: [],
       current: [],
       graphsize: [],
-      graphcolor: [] 
+      graphcolor: [],
+      transition: []
     };
     obj = JSON.parse(obj);
     if(!(obj.data instanceof(Array))){
@@ -38,6 +40,11 @@ window.exports.viewer = (function () {
               } else {
                 rads.graphcolor = rads.graphcolor.concat('green');
               }
+              if(element.transition){
+                rads.transition = rads.transition.concat(element.transition);
+              } else {
+                rads.transition = rads.transition.concat(0);
+              }
             } else {//use bar as the default
               bars.goal = bars.goal.concat(element.goal);
               bars.current = bars.current.concat(element.current);
@@ -50,6 +57,11 @@ window.exports.viewer = (function () {
                 bars.graphcolor = bars.graphcolor.concat(element.graphcolor);
               } else {
                 bars.graphcolor = bars.graphcolor.concat('green');
+              }
+              if(element.transition){
+                bars.transition = bars.transition.concat(element.transition);
+              } else {
+                bars.transition = bars.transition.concat(0);
               }
             }
             obj.data[index] = element.progress;//string so it isn't empty
@@ -83,14 +95,18 @@ window.exports.viewer = (function () {
       bar.append("rect")
         .attr("x", x)
         .attr("y", y)
-        .attr("width", bars.graphsize[counter]*(bars.current[counter]/bars.goal[counter]))
+        .attr("width", 0)
         .attr("height", 10)
-        .attr("fill", bars.graphcolor[counter]);
+        .attr("fill", bars.graphcolor[counter])
+        .transition("bar"+counter)//if the duration is 0 this still goes flawlessly.
+        .duration(bars.transition[counter]*1000)
+        .attr("width", bars.graphsize[counter]*(bars.current[counter]/bars.goal[counter]));
     }
     var rad = svgd.append("g");
     var arctest = d3.svg.arc()
       .startAngle(0 * (Math.PI/180));
     for (counter = 0; counter < rads.goal.length; counter++){
+      var arcc = 0;
       var inr = rads.graphsize[counter];
       x += inr;//offsets by half width to properly position
       arctest.endAngle(360 * (Math.PI/180))
@@ -100,11 +116,19 @@ window.exports.viewer = (function () {
         .attr("transform", "translate(" + x + "," + (inr+y+12) + ")")
         .attr("d", arctest)
         .attr("fill", 'grey');
-      arctest.endAngle((360 * (Math.PI/180))*(rads.current[counter]/rads.goal[counter]));
+      var i = d3.interpolate(arcc, (360 * (Math.PI/180))*(rads.current[counter]/rads.goal[counter]));
       rad.append("path")
         .attr("transform", "translate(" + x + "," + (inr+y+12) + ")")
         .attr("d", arctest)
-        .attr("fill", rads.graphcolor[counter]);
+        .attr("fill", rads.graphcolor[counter])
+        .transition("rad"+counter)
+        .duration(rads.transition[counter]*1000)
+        .attrTween("d", function(a){
+          return function(t) {
+            arcc = i(t);
+            return arctest.endAngle(i(t))();
+          }
+        });
       x += inr;//offsets by other half so the next value if applicable starts at this point
     }
     var checkth = $("#graff-view svg g");
