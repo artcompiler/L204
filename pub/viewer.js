@@ -72,8 +72,8 @@ window.exports.viewer = (function () {
     }
     var y = 20;
     var x = 4;
-    var svgd = d3.select(el);
-    svgd.selectAll("g")
+    var svgd = d3.select(el)
+      .selectAll("g")
       .remove();
     svgd.append("g")
       .append("text")
@@ -106,7 +106,6 @@ window.exports.viewer = (function () {
     var arctest = d3.svg.arc()
       .startAngle(0 * (Math.PI/180));
     for (counter = 0; counter < rads.goal.length; counter++){
-      var arcc = 0;
       var inr = rads.graphsize[counter];
       x += inr;//offsets by half width to properly position
       arctest.endAngle(360 * (Math.PI/180))
@@ -116,7 +115,7 @@ window.exports.viewer = (function () {
         .attr("transform", "translate(" + x + "," + (inr+y+12) + ")")
         .attr("d", arctest)
         .attr("fill", 'grey');
-      var i = d3.interpolate(arcc, (360 * (Math.PI/180))*(rads.current[counter]/rads.goal[counter]));
+      var i = d3.interpolate(0, (360 * (Math.PI/180))*(rads.current[counter]/rads.goal[counter]));
       rad.append("path")
         .attr("transform", "translate(" + x + "," + (inr+y+12) + ")")
         .attr("d", arctest)

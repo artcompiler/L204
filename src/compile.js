@@ -95,8 +95,8 @@ let translate = (function() {
   function current(node, options, resume) {
     visit(node.elts[0], options, function (err, val) {
       val = +val;
-      if(isNaN(val)){
-        err = err.concat(error("Argument must be a number.", node.elts[0]));
+      if(isNaN(val) || val < 0){
+        err = err.concat(error("Argument must be a positive number.", node.elts[0]));
       }
       let value = {current: (Math.round(val*100) / 100)};
       resume([].concat(err), value);
@@ -108,8 +108,8 @@ let translate = (function() {
         err1 = err1.concat(error("Argument Current invalid.", node.elts[0]));
       }
       visit(node.elts[1], options, function (err2, val2) {
-        if(isNaN(val2)){
-          err2 = err2.concat(error("Argument must be a number.", node.elts[1]));
+        if(isNaN(val2) || val2 < 0){
+          err2 = err2.concat(error("Argument must be a positive number.", node.elts[1]));
         }
         if(typeof val1 === "object" && val1){
           val1.goal = Math.round(val2*100) / 100;//the code will crash hard if it isn't
@@ -151,8 +151,8 @@ let translate = (function() {
         err1 = err1.concat(error("Argument Goal missing parameters.", node.elts[0]));
       }
       visit(node.elts[1], options, function (err2, val2) {
-        if(isNaN(val2)){
-          err2 = err2.concat(error("Argument must be a number.", node.elts[1]));
+        if(isNaN(val2) || val2 < 0){
+          err2 = err2.concat(error("Argument must be a positive number.", node.elts[1]));
         }
         if(typeof val1 === "object" && val1){
           val1.transition = val2;
@@ -169,8 +169,8 @@ let translate = (function() {
         err1 = err1.concat(error("Argument Goal missing parameters.", node.elts[0]));
       }
       visit(node.elts[1], options, function (err2, val2) {
-        if(isNaN(val2)){
-          err2 = err2.concat(error("Argument must be a number.", node.elts[1]));
+        if(isNaN(val2) || val2 < 0){
+          err2 = err2.concat(error("Argument must be a positive number.", node.elts[1]));
         }
         if(typeof val1 === "object" && val1){
           val1.graphsize = val2;
@@ -206,22 +206,22 @@ let translate = (function() {
         err1 = err1.concat(error("Argument Goal missing parameters.", node.elts[0]));
       }
       visit(node.elts[1], options, function (err2, val2) {
-        if(isNaN(val2)){
-          err2 = err2.concat(error("Argument must be a number.", node.elts[1]));
+        if(isNaN(val2) || val2 < 0 || +val2 > 255){
+          err2 = err2.concat(error("Argument must be between 0 and 255.", node.elts[1]));
         } else {
           val2 = (+val2).toString(16);
           val2 = (val2.length == 1 ? "0" + val2 : val2);
         }
         visit(node.elts[2], options, function (err3, val3) {
-          if(isNaN(val3)){
-            err3 = err3.concat(error("Argument must be a number.", node.elts[2]));
+          if(isNaN(val3) || val3 < 0 || +val3 > 255){
+            err3 = err3.concat(error("Argument must be between 0 and 255.", node.elts[2]));
           } else {
             val3 = (+val3).toString(16);
             val3 = (val3.length == 1 ? "0" + val3 : val3);
           }
           visit(node.elts[3], options, function (err4, val4) {
-            if(isNaN(val4)){
-              err4 = err4.concat(error("Argument must be a number.", node.elts[3]));
+            if(isNaN(val4) || val4 < 0 || +val4 > 255){
+              err4 = err4.concat(error("Argument must be between 0 and 255.", node.elts[3]));
             } else {
               val4 = (+val4).toString(16);
               val4 = (val4.length == 1 ? "0" + val4 : val4);
