@@ -5,11 +5,15 @@ window.exports.viewer = (function () {
   function update(el, obj, src, pool) {
     var bars = {
       goal: [],
-      current: []
+      current: [],
+      graphsize: [],
+      graphcolor: []
     };
     var rads = {
       goal: [],
-      current: []
+      current: [],
+      graphsize: [],
+      graphcolor: [] 
     };
     obj = JSON.parse(obj);
     if(!(obj.data instanceof(Array))){
@@ -24,9 +28,29 @@ window.exports.viewer = (function () {
             if(element.graphtype && element.graphtype == "rad"){
               rads.goal = rads.goal.concat(element.goal);
               rads.current = rads.current.concat(element.current);
+              if(element.graphsize){
+                rads.graphsize = rads.graphsize.concat(+element.graphsize);
+              } else {
+                rads.graphsize = rads.graphsize.concat(30);
+              }
+              if(element.graphcolor){
+                rads.graphcolor = rads.graphcolor.concat(element.graphcolor);
+              } else {
+                rads.graphcolor = rads.graphcolor.concat('green');
+              }
             } else {//use bar as the default
               bars.goal = bars.goal.concat(element.goal);
               bars.current = bars.current.concat(element.current);
+              if(element.graphsize){
+                bars.graphsize = bars.graphsize.concat(+element.graphsize);
+              } else {
+                bars.graphsize = bars.graphsize.concat(300);
+              }
+              if(element.graphcolor){
+                bars.graphcolor = bars.graphcolor.concat(element.graphcolor);
+              } else {
+                bars.graphcolor = bars.graphcolor.concat('green');
+              }
             }
             obj.data[index] = element.progress;//string so it isn't empty
           }//if these don't happen AND no error was caught previously it's out of my hands.
@@ -35,12 +59,13 @@ window.exports.viewer = (function () {
       str = obj.data;
     }
     var y = 20;
+    var x = 4;
     var svgd = d3.select(el);
     svgd.selectAll("g")
       .remove();
     svgd.append("g")
       .append("text")
-      .attr("x", 4)
+      .attr("x", x)
       .attr("y", y)
       .text(str)
       .style("font-size", 14+"px")
@@ -48,38 +73,39 @@ window.exports.viewer = (function () {
     var bar = svgd.append("g");
     y -= 6;
     for(var counter = 0; counter < bars.goal.length; counter++){
-      y += 10;
+      y += 11;
       bar.append("rect")
-        .attr("x", 4)
+        .attr("x", x)
         .attr("y", y)
-        .attr("width", bars.goal[counter])
+        .attr("width", bars.graphsize[counter])
         .attr("height", 10)
         .attr("fill", 'black');
       bar.append("rect")
-        .attr("x", 4)
+        .attr("x", x)
         .attr("y", y)
-        .attr("width", bars.current[counter])
+        .attr("width", bars.graphsize[counter]*(bars.current[counter]/bars.goal[counter]))
         .attr("height", 10)
-        .attr("fill", 'green');
+        .attr("fill", bars.graphcolor[counter]);
     }
     var rad = svgd.append("g");
-    var inr = 30;
     var arctest = d3.svg.arc()
-      .innerRadius(10)
-      .outerRadius(inr)
-      .startAngle(0 * (Math.PI/180))
-      .endAngle(360 * (Math.PI/180));
+      .startAngle(0 * (Math.PI/180));
     for (counter = 0; counter < rads.goal.length; counter++){
-      arctest.endAngle(360 * (Math.PI/180));
+      var inr = rads.graphsize[counter];
+      x += inr;//offsets by half width to properly position
+      arctest.endAngle(360 * (Math.PI/180))
+        .innerRadius(inr/3)
+        .outerRadius(inr);
       rad.append("path")
-        .attr("transform", "translate(" + (inr+4+(2*inr*counter)) + "," + (inr+y+12) + ")")
+        .attr("transform", "translate(" + x + "," + (inr+y+12) + ")")
         .attr("d", arctest)
         .attr("fill", 'grey');
       arctest.endAngle((360 * (Math.PI/180))*(rads.current[counter]/rads.goal[counter]));
       rad.append("path")
-        .attr("transform", "translate(" + (inr+4+(2*inr*counter)) + "," + (inr+y+12) + ")")
+        .attr("transform", "translate(" + x + "," + (inr+y+12) + ")")
         .attr("d", arctest)
-        .attr("fill", 'green');
+        .attr("fill", rads.graphcolor[counter]);
+      x += inr;//offsets by other half so the next value if applicable starts at this point
     }
     var checkth = $("#graff-view svg g");
     var bbox = $("#graff-view svg g")[0].getBBox();
