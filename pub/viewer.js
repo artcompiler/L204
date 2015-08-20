@@ -17,7 +17,8 @@ window.exports.viewer = (function () {
       graphsize: [],
       graphcolor: [],
       transition: [],
-      thickness: []
+      thickness: [],
+      txt: []
     };
     obj = JSON.parse(obj);
     if(!(obj.data instanceof(Array))){
@@ -36,6 +37,7 @@ window.exports.viewer = (function () {
               rads.graphcolor = rads.graphcolor.concat(element.graphcolor ? element.graphcolor : 'green');
               rads.transition = rads.transition.concat(element.transition ? +element.transition : 0);
               rads.thickness = rads.thickness.concat(element.thickness ? +element.thickness : 5);
+              rads.txt = rads.txt.concat(element.progress);
             } else {//use bar as the default
               bars.goal = bars.goal.concat(element.goal);
               bars.current = bars.current.concat(element.current);
@@ -84,8 +86,7 @@ window.exports.viewer = (function () {
       y += bars.thickness[counter]+1;
     }
     var rad = svgd.append("g");
-    var arctest = d3.svg.arc()
-      .startAngle(0 * (Math.PI/180));
+    var arcs = [];
     for (counter = 0; counter < rads.goal.length; counter++){
       var inr = rads.graphsize[counter];
       x += inr;//offsets by half width to properly position
@@ -93,24 +94,38 @@ window.exports.viewer = (function () {
       if(r < 0){
         r = 0;
       }
-      arctest.endAngle(360 * (Math.PI/180))
+      arcs = arcs.concat(d3.svg.arc()
+        .startAngle(0 * (Math.PI/180))
+        .endAngle(360 * (Math.PI/180))
         .innerRadius(r)
-        .outerRadius(inr);
+        .outerRadius(inr)
+      );
       rad.append("path")
         .attr("transform", "translate(" + x + "," + (inr+y) + ")")
-        .attr("d", arctest)
+        .attr("d", arcs[counter])
         .attr("fill", 'grey');
-      var i = d3.interpolate(0, (360 * (Math.PI/180))*(rads.current[counter]/rads.goal[counter]));
+      var fontsize = 11*(inr/30);
+      var trans = (5-rads.txt[counter].length)*(fontsize/4);
+      rad.append("text")
+        .attr("class", "label")
+        .attr("x", x-inr/2 + trans)
+        .attr("y", y+inr + (fontsize/4))
+        .text(rads.txt[counter])
+        .style("font-size", fontsize+"px")
+        .style("font-weight", 600);
       rad.append("path")
+        .datum(counter)
         .attr("transform", "translate(" + x + "," + (inr+y) + ")")
-        .attr("d", arctest)
+        .attr("d", arcs[counter])
         .attr("fill", rads.graphcolor[counter])
         .transition("rad"+counter)
         .duration(rads.transition[counter]*1000)
-        .attrTween("d", function(a){
+        .attrTween("d", function(d, ind, a){
+          var i = d3.interpolate(0, (360*(Math.PI/180))*(rads.current[d]/rads.goal[d]));
+
           return function(t) {
             arcc = i(t);
-            return arctest.endAngle(i(t))();
+            return arcs[d].endAngle(i(t))();
           }
         });
       x += inr;//offsets by other half so the next value if applicable starts at this point
