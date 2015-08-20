@@ -20,4 +20,5 @@ exports.globalLexicon = {
     "size" : { "tk": 0x01, "name": "SIZE", "cls" : "function", "length": 2, "arity": 2},
     "hex" : { "tk": 0x01, "name": "HEX", "cls" : "function", "length": 2, "arity": 2},
     "rgb" : { "tk": 0x01, "name": "RGB", "cls" : "function", "length": 4, "arity": 4},
+    "thickness" : { "tk": 0x01, "name": "THICK", "cls" : "function", "length": 2, "arity": 2}
 }
