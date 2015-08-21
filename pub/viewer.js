@@ -64,8 +64,8 @@ window.exports.viewer = (function () {
       });
       str = obj.data;
     }
-    var y = 20;
-    var x = 4;
+    var y = 0;
+    var x = 0;
     var svgd = d3.select(el);
     svgd.selectAll("g")
       .remove();
@@ -73,12 +73,13 @@ window.exports.viewer = (function () {
     var r = 0;
     for(var counter = 0; counter < bars.goal.length; counter++){
       finaltext = ((bars.texttype[counter] == 'percent') ? (bars.progress[counter]+'%') : (bars.current[counter]+'/'+bars.goal[counter]));
+      fontsize = bars.thickness[counter]+1;
       bar.append("text")
         .datum(counter)
-        .attr("x", x+bars.graphsize[counter]-(finaltext.length*14/2))
-        .attr("y", y)//the offset for rotation does not concern us.
+        .attr("x", x+bars.graphsize[counter])
+        .attr("y", y+bars.thickness[counter])//the offset for rotation does not concern us.
         .text(" ")
-        .style("font-size", 14+"px")
+        .style("font-size", fontsize+"px")
         .style("font-weight", 600)
         .transition("bart"+counter)
         .duration(bars.transition[counter]*1000)
@@ -115,9 +116,9 @@ window.exports.viewer = (function () {
         .duration(bars.transition[counter]*1000)
         .attr("width", bars.graphsize[counter]*(bars.current[counter]/bars.goal[counter]));
       y += Math.abs(Math.cos(bars.rotation[counter]*(Math.PI/180))*bars.thickness[counter])
-        + Math.abs(Math.sin(bars.rotation[counter]*(Math.PI/180))*bars.graphsize[counter]/2)+20;
-      if(bars.graphsize[counter] > maxwidth){
-        maxwidth = bars.graphsize[counter];
+        + Math.abs(Math.sin(bars.rotation[counter]*(Math.PI/180))*bars.graphsize[counter]/2)+6;
+      if(bars.graphsize[counter] + finaltext.length*fontsize/2 > maxwidth){
+        maxwidth = bars.graphsize[counter] + finaltext.length*fontsize/2;
       }
     }
     var rad = svgd.append("g");
