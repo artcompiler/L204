@@ -198,6 +198,24 @@ let translate = (function() {
       });
     });
   }
+  function rotate(node, options, resume) {
+    visit(node.elts[0], options, function (err1, val1) {
+      if(typeof val1 !== "object" || !val1){
+        err1 = err1.concat(error("Argument Goal invalid.", node.elts[0]));
+      } else if(!val1.goal || !val1.current){//size, transition, and color optional
+        err1 = err1.concat(error("Argument Goal missing parameters.", node.elts[0]));
+      }
+      visit(node.elts[1], options, function (err2, val2) {
+        if(isNaN(val2)){
+          err2 = err2.concat(error("Argument must be a number.", node.elts[1]));
+        }
+        if(typeof val1 === "object" && val1){
+          val1.rotation = val2;
+        }
+        resume([].concat(err1).concat(err2), val1);
+      });
+    });
+  }
   function hex(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
       if(typeof val1 !== "object" || !val1){
@@ -300,6 +318,7 @@ let translate = (function() {
     "HEX" : hex,
     "RGB" : rgb,
     "THICK" : thick,
+    "ROTATE" : rotate,
   }
   return translate;
 })();
