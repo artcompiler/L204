@@ -21,5 +21,6 @@ exports.globalLexicon = {
     "hex" : { "tk": 0x01, "name": "HEX", "cls" : "function", "length": 2, "arity": 2},
     "rgb" : { "tk": 0x01, "name": "RGB", "cls" : "function", "length": 4, "arity": 4},
     "thickness" : { "tk": 0x01, "name": "THICK", "cls" : "function", "length": 2, "arity": 2},
-    "rotate" : { "tk": 0x01, "name": "ROTATE", "cls": "function", "length": 2, "arity": 2}
+    "rotate" : { "tk": 0x01, "name": "ROTATE", "cls": "function", "length": 2, "arity": 2},
+    "fraction" : { "tk": 0x01, "name": "FRACTION", "cls": "function", "length": 1, "arity": 1},
 }

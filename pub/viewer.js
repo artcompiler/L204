@@ -8,21 +8,24 @@ window.exports.viewer = (function () {
     var bars = {
       goal: [],
       current: [],
-      graphsize: [],
-      graphcolor: [],
-      transition: [],
-      thickness: [],
-      rotation: []
-    };
-    var rads = {
-      goal: [],
-      current: [],
+      progress: [],
       graphsize: [],
       graphcolor: [],
       transition: [],
       thickness: [],
       rotation: [],
-      txt: []
+      texttype: []
+    };
+    var rads = {
+      goal: [],
+      current: [],
+      progress: [],
+      graphsize: [],
+      graphcolor: [],
+      transition: [],
+      thickness: [],
+      rotation: [],
+      texttype: []
     };
     obj = JSON.parse(obj);
     if(!(obj.data instanceof(Array))){
@@ -37,20 +40,23 @@ window.exports.viewer = (function () {
             if(element.graphtype && element.graphtype == "rad"){
               rads.goal = rads.goal.concat(element.goal);
               rads.current = rads.current.concat(element.current);
+              rads.progress = rads.progress.concat(element.progress);
               rads.graphsize = rads.graphsize.concat(element.graphsize ? +element.graphsize : 30);
               rads.graphcolor = rads.graphcolor.concat(element.graphcolor ? element.graphcolor : 'green');
               rads.transition = rads.transition.concat(element.transition ? +element.transition : 0);
               rads.thickness = rads.thickness.concat(element.thickness ? +element.thickness : 5);
               rads.rotation = rads.rotation.concat(element.rotation ? +element.rotation : 0);
-              rads.txt = rads.txt.concat(element.progress);
+              rads.texttype = rads.texttype.concat(element.texttype ? element.texttype : 'percent');
             } else {//use bar as the default
               bars.goal = bars.goal.concat(element.goal);
               bars.current = bars.current.concat(element.current);
+              bars.progress = bars.progress.concat(element.progress);
               bars.graphsize = bars.graphsize.concat(element.graphsize ? +element.graphsize : 300);
               bars.graphcolor = bars.graphcolor.concat(element.graphcolor ? element.graphcolor : 'green');
               bars.transition = bars.transition.concat(element.transition ? +element.transition : 0);
               bars.thickness = bars.thickness.concat(element.thickness ? +element.thickness : 10);
               bars.rotation = bars.rotation.concat(element.rotation ? +element.rotation : 0);
+              bars.texttype = bars.texttype.concat(element.texttype ? element.texttype : 'percent');
             }
             obj.data[index] = element.progress;//string so it isn't empty
           }//if these don't happen AND no error was caught previously it's out of my hands.
@@ -63,22 +69,45 @@ window.exports.viewer = (function () {
     var svgd = d3.select(el);
     svgd.selectAll("g")
       .remove();
-    svgd.append("g")
+    /*svgd.append("g")
       .append("text")
       .attr("x", x)
       .attr("y", y)
       .text(str)
       .style("font-size", 14+"px")
-      .style("font-weight", 600);
+      .style("font-weight", 600);*/
     var bar = svgd.append("g");
-    y += 4;
+    //y += 4;
     var r = 0;
     for(var counter = 0; counter < bars.goal.length; counter++){
+      bar.append("text")
+        .datum(counter)
+        .attr("x", x)
+        .attr("y", y)//the offset for rotation does not concern us.
+        .text(" ")
+        .style("font-size", 14+"px")
+        .style("font-weight", 600)
+        .transition("bart"+counter)
+        .duration(bars.transition[counter]*1000)
+        .tween("text", function(d, ind, a){
+          if(bars.texttype[d] == 'percent'){
+            var it = d3.interpolate(0, bars.progress[d]);
+            return function(t){
+              this.textContent = (Math.round(it(t)*100)/100) + "%";
+            }
+          } else {
+            var i0 = d3.interpolate(0, bars.current[d]);
+            var i1 = d3.interpolate(0, bars.goal[d]);
+            return function(t){
+              this.textContent = Math.round(i0(t)) + "/" + Math.round(i1(t));
+            }
+          }
+        });
       y += Math.abs(Math.sin(bars.rotation[counter]*(Math.PI/180))*bars.graphsize[counter]/2);
       bar.append("rect")
         .attr("transform", "rotate("+bars.rotation[counter]+","+(x+bars.graphsize[counter]/2)+","+(y+bars.thickness[counter]/2)+")")
-        .attr("x", x)
-        .attr("y", y)
+        .attr("x", x)//starts at 4
+        .attr("y", y)//starts at 20
         .attr("width", bars.graphsize[counter])
         .attr("height", bars.thickness[counter])
         .attr("fill", 'black');
@@ -93,7 +122,7 @@ window.exports.viewer = (function () {
         .duration(bars.transition[counter]*1000)
         .attr("width", bars.graphsize[counter]*(bars.current[counter]/bars.goal[counter]));
       y += Math.abs(Math.cos(bars.rotation[counter]*(Math.PI/180))*bars.thickness[counter])
-        + Math.abs(Math.sin(bars.rotation[counter]*(Math.PI/180))*bars.graphsize[counter]/2)+6;
+        + Math.abs(Math.sin(bars.rotation[counter]*(Math.PI/180))*bars.graphsize[counter]/2)+20;
       if(bars.graphsize[counter] > maxwidth){
         maxwidth = bars.graphsize[counter];
       }
@@ -118,14 +147,31 @@ window.exports.viewer = (function () {
         .attr("d", arcs[counter])
         .attr("fill", 'grey');
       var fontsize = 11*(inr/30);
-      var trans = (5-rads.txt[counter].length)*(fontsize/4);
+      //var trans = (5-rads.txt[counter].length)*(fontsize/4);
       rad.append("text")
+        .datum(counter)
         .attr("class", "label")
-        .attr("x", x-inr/2 + trans)
+        .attr("x", x-inr/2)
         .attr("y", y+inr + (fontsize/4))
-        .text(rads.txt[counter])
+        .text(" ")
         .style("font-size", fontsize+"px")
-        .style("font-weight", 600);
+        .style("font-weight", 600)
+        .transition("radt"+counter)
+        .duration(rads.transition[counter]*1000)
+        .tween("text", function(d, ind, a){
+          if(rads.texttype[d] == 'percent'){
+            var it = d3.interpolate(0, rads.progress[d]);
+            return function(t){
+              this.textContent = (Math.round(it(t)*100)/100) + "%";
+            }
+          } else {
+            var i0 = d3.interpolate(0, rads.current[d]);
+            var i1 = d3.interpolate(0, rads.goal[d]);
+            return function(t){
+              this.textContent = Math.round(i0(t)) + "/" + Math.round(i1(t));
+            }
+          }
+        });
       rad.append("path")
         .datum(counter)
         .attr("transform", "translate(" + x + "," + (inr+y) + ")")
@@ -137,7 +183,6 @@ window.exports.viewer = (function () {
           var i = d3.interpolate(rads.rotation[d]*(Math.PI/180), rads.rotation[d]*(Math.PI/180)+(360*(Math.PI/180))*(rads.current[d]/rads.goal[d]));
 
           return function(t) {
-            arcc = i(t);
             return arcs[d].endAngle(i(t))();
           }
         });
