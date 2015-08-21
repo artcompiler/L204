@@ -69,20 +69,13 @@ window.exports.viewer = (function () {
     var svgd = d3.select(el);
     svgd.selectAll("g")
       .remove();
-    /*svgd.append("g")
-      .append("text")
-      .attr("x", x)
-      .attr("y", y)
-      .text(str)
-      .style("font-size", 14+"px")
-      .style("font-weight", 600);*/
     var bar = svgd.append("g");
-    //y += 4;
     var r = 0;
     for(var counter = 0; counter < bars.goal.length; counter++){
+      finaltext = ((bars.texttype[counter] == 'percent') ? (bars.progress[counter]+'%') : (bars.current[counter]+'/'+bars.goal[counter]));
       bar.append("text")
         .datum(counter)
-        .attr("x", x)
+        .attr("x", x+bars.graphsize[counter]-(finaltext.length*14/2))
         .attr("y", y)//the offset for rotation does not concern us.
         .text(" ")
         .style("font-size", 14+"px")
@@ -146,7 +139,8 @@ window.exports.viewer = (function () {
         .attr("transform", "translate(" + x + "," + (inr+y) + ")")
         .attr("d", arcs[counter])
         .attr("fill", 'grey');
-      var fontsize = 11*(inr/30);
+      finaltext = ((rads.texttype[counter] == 'percent') ? (rads.progress[counter]+'%') : (rads.current[counter]+'/'+rads.goal[counter]));
+      var fontsize = 11*(inr/30)*(6/finaltext.length);
       //var trans = (5-rads.txt[counter].length)*(fontsize/4);
       rad.append("text")
         .datum(counter)
@@ -154,7 +148,7 @@ window.exports.viewer = (function () {
         .attr("x", x-inr/2)
         .attr("y", y+inr + (fontsize/4))
         .text(" ")
-        .style("font-size", fontsize+"px")
+        .style("font-size", Math.round(fontsize)+"px")
         .style("font-weight", 600)
         .transition("radt"+counter)
         .duration(rads.transition[counter]*1000)
