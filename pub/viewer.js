@@ -17,6 +17,7 @@ window.exports.viewer = (function () {
       rotation: [],
       dec: [],
       texttype: [],
+      style: [],
       arcs: []
     };
     obj = JSON.parse(obj);
@@ -26,9 +27,11 @@ window.exports.viewer = (function () {
     if (obj.error) {
       str = "ERROR: " + obj.error;
     } else {
-      obj.data.forEach(function(element, index, array){
-        if(typeof element === "object" && element){
-          if(element.goal && element.current && element.progress){           
+      var style = "";
+      obj.data.forEach(function(lmt, index, array){
+        if(typeof lmt === "object" && lmt){
+          var element = (lmt.style) ? lmt.value : lmt;
+          if(element.goal && element.current && element.progress){
             gcObj.goal = gcObj.goal.concat(element.goal);
             gcObj.current = gcObj.current.concat(element.current);
             gcObj.progress = gcObj.progress.concat(element.progress);
@@ -45,9 +48,15 @@ window.exports.viewer = (function () {
               gcObj.graphsize = gcObj.graphsize.concat(element.graphsize ? +element.graphsize : 300);
               gcObj.thickness = gcObj.thickness.concat(element.thickness ? +element.thickness : 10);
             }
+            if(lmt.style){
+              gcObj.style = gcObj.style.concat(lmt.style);
+            } else {
+              style = [{key: "font-weight", val: 600}];
+              gcObj.style = gcObj.style.concat([style]);
+            }
             obj.data[index] = element.progress;//string so it isn't empty
-          }//if these don't happen AND no error was caught previously it's out of my hands.
-        }//that, or it's a different object that will be added later that needs it's own statement.
+          }
+        }
       });
       str = obj.data;
     }
@@ -59,6 +68,12 @@ window.exports.viewer = (function () {
       .remove();
     var bar = svgd.append("g");
     var rad = svgd.append("g");
+    function styles(selection, these){
+      these.forEach(function (p){
+        selection
+          .style(p.key, p.val);
+      });
+    }
     for(var counter = 0; counter < gcObj.goal.length; counter++){
       if(gcObj.graphtype[counter] == 'bar'){
         finaltext = ((gcObj.texttype[counter] == 'percent') ? (gcObj.progress[counter]+'%') : (gcObj.current[counter]+'/'+gcObj.goal[counter]));
@@ -69,7 +84,7 @@ window.exports.viewer = (function () {
           .attr("y", y+gcObj.thickness[counter])
           .text(" ")
           .style("font-size", fontsize+"px")
-          .style("font-weight", 600)
+          .call(styles, gcObj.style[counter])
           .transition("bart"+counter)
           .duration(gcObj.transition[counter]*1000)
           .tween("text", function(d, ind, a){
@@ -82,7 +97,7 @@ window.exports.viewer = (function () {
               var i0 = d3.interpolate(0, gcObj.current[d]);
               var i1 = d3.interpolate(0, gcObj.goal[d]);
               return function(t){
-                this.textContent = +(i0(t).toFixed(gcObj.dec[d])) + "/" + +(i1(t).toFixed(gcObj.dec[d]));
+                this.textContent = (+(i0(t).toFixed(gcObj.dec[d]))) + "/" + (+(i1(t).toFixed(gcObj.dec[d])));
               }
             }
           });
@@ -138,20 +153,20 @@ window.exports.viewer = (function () {
           .attr("y", y + (fontsize/4))//before we DIDN'T have y+= inr, so it was +inr.
           .text(" ")
           .style("font-size", Math.round(fontsize)+"px")
-          .style("font-weight", 600)
+          .call(styles, gcObj.style[counter])
           .transition("radt"+counter)
           .duration(gcObj.transition[counter]*1000)
           .tween("text", function(d, ind, a){
             if(gcObj.texttype[d] == 'percent'){
               var it = d3.interpolate(0, gcObj.progress[d]);
               return function(t){
-                this.textContent = (+(it(t).toFixed(gcObj.dec[d]))) + "%";
+                this.textContent =(+(it(t).toFixed(gcObj.dec[d]))) + "%";
               }
             } else {
               var i0 = d3.interpolate(0, gcObj.current[d]);
               var i1 = d3.interpolate(0, gcObj.goal[d]);
               return function(t){
-                this.textContent = +(i0(t).toFixed(gcObj.dec[d])) + "/" + +(i1(t).toFixed(gcObj.dec[d]));
+                this.textContent =(+(i0(t).toFixed(gcObj.dec[d]))) + "/" + (+(i1(t).toFixed(gcObj.dec[d])));
               }
             }
           });
