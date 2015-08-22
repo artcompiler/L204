@@ -24,4 +24,5 @@ exports.globalLexicon = {
     "rotate" : { "tk": 0x01, "name": "ROTATE", "cls": "function", "length": 2, "arity": 2},
     "fraction" : { "tk": 0x01, "name": "FRACTION", "cls": "function", "length": 1, "arity": 1},
     "align" : { "tk": 0x01, "name": "ALIGN", "cls": "function", "length": 2, "arity": 2},
+    "style" : { "tk": 0x01, "name": "STYLE", "cls": "function", "length": 2, "arity": 2 },
 }
