@@ -14,6 +14,7 @@ window.exports.viewer = (function () {
       transition: [],
       thickness: [],
       rotation: [],
+      dec: [],
       texttype: []
     };
     var rads = {
@@ -25,6 +26,7 @@ window.exports.viewer = (function () {
       transition: [],
       thickness: [],
       rotation: [],
+      dec: [],
       texttype: []
     };
     obj = JSON.parse(obj);
@@ -41,6 +43,7 @@ window.exports.viewer = (function () {
               rads.goal = rads.goal.concat(element.goal);
               rads.current = rads.current.concat(element.current);
               rads.progress = rads.progress.concat(element.progress);
+              rads.dec = rads.dec.concat(element.dec);
               rads.graphsize = rads.graphsize.concat(element.graphsize ? +element.graphsize : 30);
               rads.graphcolor = rads.graphcolor.concat(element.graphcolor ? element.graphcolor : 'green');
               rads.transition = rads.transition.concat(element.transition ? +element.transition : 0);
@@ -51,6 +54,7 @@ window.exports.viewer = (function () {
               bars.goal = bars.goal.concat(element.goal);
               bars.current = bars.current.concat(element.current);
               bars.progress = bars.progress.concat(element.progress);
+              bars.dec = bars.dec.concat(element.dec);
               bars.graphsize = bars.graphsize.concat(element.graphsize ? +element.graphsize : 300);
               bars.graphcolor = bars.graphcolor.concat(element.graphcolor ? element.graphcolor : 'green');
               bars.transition = bars.transition.concat(element.transition ? +element.transition : 0);
@@ -87,13 +91,13 @@ window.exports.viewer = (function () {
           if(bars.texttype[d] == 'percent'){
             var it = d3.interpolate(0, bars.progress[d]);
             return function(t){
-              this.textContent = (Math.round(it(t)*100)/100) + "%";
+              this.textContent = (+(it(t).toFixed(bars.dec[d]))) + "%";
             }
           } else {
             var i0 = d3.interpolate(0, bars.current[d]);
             var i1 = d3.interpolate(0, bars.goal[d]);
             return function(t){
-              this.textContent = Math.round(i0(t)) + "/" + Math.round(i1(t));
+              this.textContent = +(i0(t).toFixed(bars.dec[d])) + "/" + +(i1(t).toFixed(bars.dec[d]));
             }
           }
         });
@@ -105,6 +109,10 @@ window.exports.viewer = (function () {
         .attr("width", bars.graphsize[counter])
         .attr("height", bars.thickness[counter])
         .attr("fill", 'black');
+      var clamp = (bars.current[counter]/bars.goal[counter]);
+      if(clamp > 1){
+        clamp = 1;
+      }
       bar.append("rect")
         .attr("transform", "rotate("+bars.rotation[counter]+","+(x+bars.graphsize[counter]/2)+","+(y+bars.thickness[counter]/2)+")")
         .attr("x", x)
@@ -114,7 +122,7 @@ window.exports.viewer = (function () {
         .attr("fill", bars.graphcolor[counter])
         .transition("bar"+counter)//if the duration is 0 this still goes flawlessly.
         .duration(bars.transition[counter]*1000)
-        .attr("width", bars.graphsize[counter]*(bars.current[counter]/bars.goal[counter]));
+        .attr("width", bars.graphsize[counter]*clamp);
       y += Math.abs(Math.cos(bars.rotation[counter]*(Math.PI/180))*bars.thickness[counter])
         + Math.abs(Math.sin(bars.rotation[counter]*(Math.PI/180))*bars.graphsize[counter]/2)+6;
       if(bars.graphsize[counter] + finaltext.length*fontsize/2 > maxwidth){
@@ -157,13 +165,13 @@ window.exports.viewer = (function () {
           if(rads.texttype[d] == 'percent'){
             var it = d3.interpolate(0, rads.progress[d]);
             return function(t){
-              this.textContent = (Math.round(it(t)*100)/100) + "%";
+              this.textContent = (+(it(t).toFixed(rads.dec[d]))) + "%";
             }
           } else {
             var i0 = d3.interpolate(0, rads.current[d]);
             var i1 = d3.interpolate(0, rads.goal[d]);
             return function(t){
-              this.textContent = Math.round(i0(t)) + "/" + Math.round(i1(t));
+              this.textContent = +(i0(t).toFixed(rads.dec[d])) + "/" + +(i1(t).toFixed(rads.dec[d]));
             }
           }
         });
