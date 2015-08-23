@@ -4,7 +4,6 @@
 window.exports.viewer = (function () {
   function update(el, obj, src, pool) {
     maxwidth=0;
-    maxheight=0;
     var gcObj = {
       goal: [],
       current: [],
@@ -27,7 +26,6 @@ window.exports.viewer = (function () {
     if (obj.error) {
       str = "ERROR: " + obj.error;
     } else {
-      var style = "";
       obj.data.forEach(function(lmt, index, array){
         if(typeof lmt === "object" && lmt){
           var element = (lmt.style) ? lmt.value : lmt;
@@ -41,6 +39,7 @@ window.exports.viewer = (function () {
             gcObj.transition = gcObj.transition.concat(element.transition ? +element.transition : 0);
             gcObj.rotation = gcObj.rotation.concat(element.rotation ? +element.rotation : 0);
             gcObj.texttype = gcObj.texttype.concat(element.texttype ? element.texttype : 'percent');
+            gcObj.style = gcObj.style.concat(lmt.style ? [lmt.style] : [[{key: "font-weight", val: 600}]]);
             if(element.graphtype && element.graphtype == "rad"){ 
               gcObj.graphsize = gcObj.graphsize.concat(element.graphsize ? +element.graphsize : 30);
               gcObj.thickness = gcObj.thickness.concat(element.thickness ? +element.thickness : 5);
@@ -48,17 +47,9 @@ window.exports.viewer = (function () {
               gcObj.graphsize = gcObj.graphsize.concat(element.graphsize ? +element.graphsize : 300);
               gcObj.thickness = gcObj.thickness.concat(element.thickness ? +element.thickness : 10);
             }
-            if(lmt.style){
-              gcObj.style = gcObj.style.concat([lmt.style]);
-            } else {
-              style = [{key: "font-weight", val: 600}];
-              gcObj.style = gcObj.style.concat([style]);
-            }
-            obj.data[index] = element.progress;//string so it isn't empty
           }
         }
       });
-      str = obj.data;
     }
     var y = 0;
     var x = 0;
@@ -130,7 +121,7 @@ window.exports.viewer = (function () {
         }
       } else if(gcObj.graphtype[counter] == 'rad'){
         var inr = gcObj.graphsize[counter];
-        y += inr;//we're offsetting in this direction now.
+        y += inr;
         r = inr - gcObj.thickness[counter];
         if(r<0){
           r = 0;
@@ -146,7 +137,7 @@ window.exports.viewer = (function () {
           .attr("fill", 'grey');
         finaltext = ((gcObj.texttype[counter] == 'percent') ? (gcObj.progress[counter]+'%') : (gcObj.current[counter]+'/'+gcObj.goal[counter]));
         fontsize = 11*(inr/30)*(5/finaltext.length);
-        rad.append("text")
+        tex = rad.append("text")
           .datum(counter)
           .attr("class", "label")
           .attr("x", x+inr/2 - (fontsize/4))//before we had x+= inr, so it was -inr/2.
@@ -190,11 +181,8 @@ window.exports.viewer = (function () {
         }
       }
     }
-    if(x < maxwidth){
-      x = maxwidth;
-    }
     $(el).attr("height", y + "px");
-    $(el).attr("width", x + "px");
+    $(el).attr("width", maxwidth + "px");
   }
   function capture(el) {
     var mySVG = $(el).html();

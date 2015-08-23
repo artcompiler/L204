@@ -220,31 +220,13 @@ let translate = (function() {
           err2 = err2.concat(error("Argument must be a positive number.", node.elts[1]));
         }
         if(typeof val1 === "object" && val1){
-          val1.thickness = val2;
+          val1["thickness"] = val2;
         }
         resume([].concat(err1).concat(err2), val1);
       });
     });
   }
   function rotate(node, options, resume) {
-    visit(node.elts[0], options, function (err1, val1) {
-      if(typeof val1 !== "object" || !val1){
-        err1 = err1.concat(error("Argument Goal invalid.", node.elts[0]));
-      } else if(!val1.goal || !val1.current){//size, transition, and color optional
-        err1 = err1.concat(error("Argument Goal missing parameters.", node.elts[0]));
-      }
-      visit(node.elts[1], options, function (err2, val2) {
-        if(isNaN(val2)){
-          err2 = err2.concat(error("Argument must be a number.", node.elts[1]));
-        }
-        if(typeof val1 === "object" && val1){
-          val1.rotation = val2;
-        }
-        resume([].concat(err1).concat(err2), val1);
-      });
-    });
-  }
-  function align(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
       if(typeof val1 !== "object" || !val1){
         err1 = err1.concat(error("Argument Goal invalid.", node.elts[0]));
@@ -309,7 +291,9 @@ let translate = (function() {
               val4 = (+val4).toString(16);
               val4 = (val4.length == 1 ? "0" + val4 : val4);
             }
-            val1.graphcolor = "#" + val4 + val3 + val2;
+            if(typeof val1 === "object" && val1){
+              val1.graphcolor = "#" + val4 + val3 + val2;
+            }
             resume([].concat(err1).concat(err2).concat(err3).concat(err4), val1);
           });
         });
@@ -327,17 +311,11 @@ let translate = (function() {
     });
   };
   function list(node, options, resume) {
-    if(node.elts && node.elts.length){
-      visit(node.elts[0], options, function (err1, val1){
-        node.elts.shift();
-        list(node, options, function (err2, val2) {
-          val2.unshift(val1);
-          result([].concat(err1).concat(err2), val2);
-        });
-      });
-    } else {
-      resume ([], []);
-    }
+    //pre processing here
+    exprs(node, options, function(err, val){
+      //post processing here
+      resume([].concat(err), val);
+    });
   };
   function binding(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
@@ -347,17 +325,11 @@ let translate = (function() {
     });
   };
   function record(node, options, resume) {
-    if (node.elts && node.elts.length) {
-      visit(node.elts[0], options, function (err1, val1) {
-        node.elts.shift();
-        record(node, options, function (err2, val2) {
-          val2.unshift(val1);
-          resume([].concat(err1).concat(err2), val2);
-        });
-      });
-    } else {
-      resume([], []);
-    }
+    //pre processing here
+    exprs(node, options, function(err, val){
+      //post processing here
+      resume([].concat(err), val);
+    });
   };
   function exprs(node, options, resume) {
     if (node.elts && node.elts.length) {
@@ -404,7 +376,6 @@ let translate = (function() {
     "THICK" : thick,
     "ROTATE" : rotate,
     "FRACTION" : fraction,
-    "ALIGN" : align,
   }
   return translate;
 })();
