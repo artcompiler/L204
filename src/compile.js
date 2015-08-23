@@ -303,10 +303,15 @@ let translate = (function() {
   function style(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
       visit(node.elts[1], options, function (err2, val2) {
-        resume([].concat(err1).concat(err2), {
-          value: val1,
-          style: val2,
-        });
+        if(typeof val1 === "object" && val1 && val1.goal && val1.current){
+          val1.style = val2;
+          resume([].concat(err1).concat(err2), val1);
+        } else {
+          resume([].concat(err1).concat(err2), {
+            value: val1,
+            style: val2,
+          });
+        }
       });
     });
   };

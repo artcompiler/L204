@@ -26,27 +26,24 @@ window.exports.viewer = (function () {
     if (obj.error) {
       str = "ERROR: " + obj.error;
     } else {
-      obj.data.forEach(function(lmt, index, array){
-        if(typeof lmt === "object" && lmt){
-          var element = (lmt.style) ? lmt.value : lmt;
-          if(element.goal && element.current && element.progress){
-            gcObj.goal = gcObj.goal.concat(element.goal);
-            gcObj.current = gcObj.current.concat(element.current);
-            gcObj.progress = gcObj.progress.concat(element.progress);
-            gcObj.dec = gcObj.dec.concat(element.dec);
-            gcObj.graphtype = gcObj.graphtype.concat(element.graphtype ? element.graphtype : 'bar');
-            gcObj.graphcolor = gcObj.graphcolor.concat(element.graphcolor ? element.graphcolor : 'green');
-            gcObj.transition = gcObj.transition.concat(element.transition ? +element.transition : 0);
-            gcObj.rotation = gcObj.rotation.concat(element.rotation ? +element.rotation : 0);
-            gcObj.texttype = gcObj.texttype.concat(element.texttype ? element.texttype : 'percent');
-            gcObj.style = gcObj.style.concat(lmt.style ? [lmt.style] : [[{key: "font-weight", val: 600}]]);
-            if(element.graphtype && element.graphtype == "rad"){ 
-              gcObj.graphsize = gcObj.graphsize.concat(element.graphsize ? +element.graphsize : 30);
-              gcObj.thickness = gcObj.thickness.concat(element.thickness ? +element.thickness : 5);
-            } else {
-              gcObj.graphsize = gcObj.graphsize.concat(element.graphsize ? +element.graphsize : 300);
-              gcObj.thickness = gcObj.thickness.concat(element.thickness ? +element.thickness : 10);
-            }
+      obj.data.forEach(function(element, index, array){
+        if(element.goal && element.current && element.progress){
+          gcObj.goal = gcObj.goal.concat(element.goal);
+          gcObj.current = gcObj.current.concat(element.current);
+          gcObj.progress = gcObj.progress.concat(element.progress);
+          gcObj.dec = gcObj.dec.concat(element.dec);
+          gcObj.graphtype = gcObj.graphtype.concat(element.graphtype ? element.graphtype : 'bar');
+          gcObj.graphcolor = gcObj.graphcolor.concat(element.graphcolor ? element.graphcolor : 'green');
+          gcObj.transition = gcObj.transition.concat(element.transition ? +element.transition : 0);
+          gcObj.rotation = gcObj.rotation.concat(element.rotation ? +element.rotation : 0);
+          gcObj.texttype = gcObj.texttype.concat(element.texttype ? element.texttype : 'percent');
+          gcObj.style = gcObj.style.concat(element.style ? [element.style] : [[{key: "font-weight", val: 600}]]);
+          if(element.graphtype && element.graphtype == "rad"){ 
+            gcObj.graphsize = gcObj.graphsize.concat(element.graphsize ? +element.graphsize : 30);
+            gcObj.thickness = gcObj.thickness.concat(element.thickness ? +element.thickness : 5);
+          } else {
+            gcObj.graphsize = gcObj.graphsize.concat(element.graphsize ? +element.graphsize : 300);
+            gcObj.thickness = gcObj.thickness.concat(element.thickness ? +element.thickness : 10);
           }
         }
       });
