@@ -49,7 +49,7 @@ window.exports.viewer = (function () {
               gcObj.thickness = gcObj.thickness.concat(element.thickness ? +element.thickness : 10);
             }
             if(lmt.style){
-              gcObj.style = gcObj.style.concat(lmt.style);
+              gcObj.style = gcObj.style.concat([lmt.style]);
             } else {
               style = [{key: "font-weight", val: 600}];
               gcObj.style = gcObj.style.concat([style]);
@@ -145,12 +145,12 @@ window.exports.viewer = (function () {
           .attr("d", gcObj.arcs[counter])
           .attr("fill", 'grey');
         finaltext = ((gcObj.texttype[counter] == 'percent') ? (gcObj.progress[counter]+'%') : (gcObj.current[counter]+'/'+gcObj.goal[counter]));
-        fontsize = 11*(inr/30)*(6/finaltext.length);
+        fontsize = 11*(inr/30)*(5/finaltext.length);
         rad.append("text")
           .datum(counter)
           .attr("class", "label")
-          .attr("x", x+inr/2)//before we had x+= inr, so it was -inr/2.
-          .attr("y", y + (fontsize/4))//before we DIDN'T have y+= inr, so it was +inr.
+          .attr("x", x+inr/2 - (fontsize/4))//before we had x+= inr, so it was -inr/2.
+          .attr("y", y + (fontsize/3))//before we DIDN'T have y+= inr, so it was +inr.
           .text(" ")
           .style("font-size", Math.round(fontsize)+"px")
           .call(styles, gcObj.style[counter])
