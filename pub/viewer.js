@@ -10,7 +10,10 @@ window.exports.viewer = (function () {
       progress: [],
       graphsize: [],
       graphcolor: [],
+      graphopacity: [],
       graphtype: [],
+      backcolor: [],
+      backopacity: [],
       transition: [],
       thickness: [],
       rotation: [],
@@ -34,6 +37,9 @@ window.exports.viewer = (function () {
           gcObj.dec = gcObj.dec.concat(element.dec);
           gcObj.graphtype = gcObj.graphtype.concat(element.graphtype ? element.graphtype : 'bar');
           gcObj.graphcolor = gcObj.graphcolor.concat(element.graphcolor ? element.graphcolor : 'green');
+          gcObj.graphopacity = gcObj.graphopacity.concat(element.graphopacity ? element.graphopacity: 1);
+          gcObj.backcolor = gcObj.backcolor.concat(element.backcolor ? element.backcolor : 'grey');
+          gcObj.backopacity = gcObj.backopacity.concat(element.backopacity ? element.backopacity: 1);          
           gcObj.transition = gcObj.transition.concat(element.transition ? +element.transition : 0);
           gcObj.rotation = gcObj.rotation.concat(element.rotation ? +element.rotation : 0);
           gcObj.texttype = gcObj.texttype.concat(element.texttype ? element.texttype : 'percent');
@@ -96,7 +102,8 @@ window.exports.viewer = (function () {
           .attr("y", y)
           .attr("width", gcObj.graphsize[counter])
           .attr("height", gcObj.thickness[counter])
-          .attr("fill", 'black');
+          .attr("fill", gcObj.backcolor[counter])
+          .attr("fill-opacity", gcObj.backopacity[counter]);
         var clamp = (gcObj.current[counter]/gcObj.goal[counter]);
         if(clamp > 1){
           clamp = 1;
@@ -108,6 +115,7 @@ window.exports.viewer = (function () {
           .attr("width", 0)
           .attr("height", gcObj.thickness[counter])
           .attr("fill", gcObj.graphcolor[counter])
+          .attr("fill-opacity", gcObj.graphopacity[counter])
           .transition("bar"+counter)//if the duration is 0 this still goes flawlessly.
           .duration(gcObj.transition[counter]*1000)
           .attr("width", gcObj.graphsize[counter]*clamp);
@@ -131,15 +139,17 @@ window.exports.viewer = (function () {
         rad.append("path")
           .attr("transform", "translate(" + (inr+x) + "," + y + ")")
           .attr("d", gcObj.arcs[counter])
-          .attr("fill", 'grey');
+          .attr("fill", gcObj.backcolor[counter])
+          .attr("fill-opacity", gcObj.backopacity[counter]);
         finaltext = ((gcObj.texttype[counter] == 'percent') ? (gcObj.progress[counter]+'%') : (gcObj.current[counter]+'/'+gcObj.goal[counter]));
-        fontsize = 11*(inr/30)*(5/finaltext.length);
+        fontsize = 16*(inr/30)*(4/finaltext.length);
         tex = rad.append("text")
           .datum(counter)
           .attr("class", "label")
-          .attr("x", x+inr/2 - (fontsize/4))//before we had x+= inr, so it was -inr/2.
+          .attr("x", x+inr)//before we had x+= inr, so it was -inr/2.
           .attr("y", y + (fontsize/3))//before we DIDN'T have y+= inr, so it was +inr.
           .text(" ")
+          .attr("text-anchor", "middle")
           .style("font-size", Math.round(fontsize)+"px")
           .call(styles, gcObj.style[counter])
           .transition("radt"+counter)
@@ -163,6 +173,7 @@ window.exports.viewer = (function () {
           .attr("transform", "translate(" + (inr+x) + "," + y + ")")
           .attr("d", gcObj.arcs[counter])
           .attr("fill", gcObj.graphcolor[counter])
+          .attr("fill-opacity", gcObj.graphopacity[counter])
           .transition("rad"+counter)
           .duration(gcObj.transition[counter]*1000)
           .attrTween("d", function(d, ind, a){
