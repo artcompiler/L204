@@ -18,7 +18,6 @@ exports.globalLexicon = {
     "radial" : { "tk": 0x01, "name": "RADIAL", "cls": "function", "length": 1, "arity": 1},
     "animate" : { "tk": 0x01, "name": "ANIMATE", "cls": "function", "length": 2, "arity": 2},
     "size" : { "tk": 0x01, "name": "SIZE", "cls" : "function", "length": 2, "arity": 2},
-    "hex" : { "tk": 0x01, "name": "HEX", "cls" : "function", "length": 1, "arity": 1},
     "rgb" : { "tk": 0x01, "name": "RGB", "cls" : "function", "length": 3, "arity": 3},
     "thickness" : { "tk": 0x01, "name": "THICK", "cls" : "function", "length": 2, "arity": 2},
     "rotate" : { "tk": 0x01, "name": "ROTATE", "cls": "function", "length": 2, "arity": 2},

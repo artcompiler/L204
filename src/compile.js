@@ -244,7 +244,7 @@ let translate = (function() {
       });
     });
   }
-  function hex(node, options, resume) {
+  /*function hex(node, options, resume) {
     visit(node.elts[0], options, function (err, val) {
       //make a check for a valid hex color
       if(!(/^#[0-9A-F]{6}$/i.test(val))){//There is a time and place for regex
@@ -252,14 +252,8 @@ let translate = (function() {
       }//and that time is now
       resume([].concat(err1).concat(err2), val);
     });
-  }
+  }*/
   function rgb(node, options, resume) {
-    /*visit(node.elts[0], options, function (err1, val1) {
-      if(typeof val1 !== "object" || !val1){
-        err1 = err1.concat(error("Argument Goal invalid.", node.elts[0]));
-      } else if(!val1.goal || !val1.current){//size, transition, and color optional
-        err1 = err1.concat(error("Argument Goal missing parameters.", node.elts[0]));
-      }*/
     visit(node.elts[0], options, function (err1, val1) {
       if(isNaN(val1) || val1 < 0 || +val1 > 255){
         err1 = err1.concat(error("Argument must be between 0 and 255.", node.elts[0]));
@@ -272,9 +266,6 @@ let translate = (function() {
           if(isNaN(val3) || val3 < 0 || +val3 > 255){
             err3 = err3.concat(error("Argument must be between 0 and 255.", node.elts[2]));
           }
-          /*if(typeof val1 === "object" && val1){
-            val1.graphcolor = "#" + val4 + val3 + val2;
-          }*/
           let ret = {
             r: val3,
             g: val2,
@@ -320,6 +311,9 @@ let translate = (function() {
       });
     });
   }
+        if(!(/^#[0-9A-F]{6}$/i.test(val))){//There is a time and place for regex
+        err = err.concat(error("Argument must be a valid hex color.", node.elts[0]));
+      }
   function fill(node, options, resume) {//first parameter is, of course, goal, second is color
     visit(node.elts[0], options, function (err1, val1) {
       if(typeof val1 !== "object" || !val1){
@@ -329,7 +323,7 @@ let translate = (function() {
       }
       visit(node.elts[1], options, function (err2, val2) {
         if(typeof val1 === "object" && val1){
-          if(typeof val2 === "string"){
+          if(typeof val2 === "string" && (/^#[0-9A-F]{6}$/i.test(val2))){
             val1.graphcolor = val2;//hex version
           } else if(typeof val2 === "object" && val2 && val2.r){
             val2.r = (+val2.r).toString(16);
@@ -357,7 +351,7 @@ let translate = (function() {
       }
       visit(node.elts[1], options, function (err2, val2) {
         if(typeof val1 === "object" && val1){
-          if(typeof val2 === "string"){
+          if(typeof val2 === "string" && (/^#[0-9A-F]{6}$/i.test(val2))){
             val1.graphcolor = val2;
           } else if(typeof val2 === "object" && val2 && val2.r){
             val2.r = (+val2.r).toString(16);
@@ -452,7 +446,6 @@ let translate = (function() {
     "RADIAL" : radial,
     "ANIMATE" : animate,
     "SIZE" : size,
-    "HEX" : hex,
     "RGB" : rgb,
     "THICK" : thick,
     "ROTATE" : rotate,
