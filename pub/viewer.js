@@ -142,7 +142,7 @@ window.exports.viewer = (function () {
           .attr("fill", gcObj.backcolor[counter])
           .attr("fill-opacity", gcObj.backopacity[counter]);
         finaltext = ((gcObj.texttype[counter] == 'percent') ? (gcObj.progress[counter]+'%') : (gcObj.current[counter]+'/'+gcObj.goal[counter]));
-        fontsize = 16*(inr/30)*(4/finaltext.length);
+        fontsize = (26-(2*finaltext.length))*(inr/30);
         tex = rad.append("text")
           .datum(counter)
           .attr("class", "label")
