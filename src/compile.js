@@ -311,9 +311,6 @@ let translate = (function() {
       });
     });
   }
-        if(!(/^#[0-9A-F]{6}$/i.test(val))){//There is a time and place for regex
-        err = err.concat(error("Argument must be a valid hex color.", node.elts[0]));
-      }
   function fill(node, options, resume) {//first parameter is, of course, goal, second is color
     visit(node.elts[0], options, function (err1, val1) {
       if(typeof val1 !== "object" || !val1){
