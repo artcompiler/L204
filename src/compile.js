@@ -136,124 +136,126 @@ let translate = (function() {
       });
     });
   }
-  function bar(node, options, resume){
+  function set(node, options, resume, params){
     visit(node.elts[0], options, function (err, val) {
       if(typeof val !== "object" || !val){
         err = err.concat(error("Argument Goal invalid.", node.elts[0]));
       } else if(!val.goal || !val.current){
         err = err.concat(error("Argument Goal missing parameters.", node.elts[0]));
-      } else {//IS an object, ISN'T null, DOES have goal and current
-        val.graphtype = "bar";
+      } else {
+        if(params.op && params.op === "default"){
+          val[params.prop] = params.val;
+          resume([].concat(err), val);
+        } else if(params.op && params.op === "positive"){
+          visit(node.elts[1], options, function (err2, val2) {
+            if(isNaN(val2) || val2 < 0){
+              err2 = err2.concat(error("Argument must be a positive number.", node.elts[1]));
+            }
+            if(typeof val === "object" && val){
+              val[params.prop] = val2;
+            }
+            resume([].concat(err).concat(err2), val);
+          });
+        } else if(params.op && params.op === "color"){
+          visit(node.elts[1], params, function (err2, val2) {
+            if(typeof val === "object" && val){
+              if(typeof val2 === "string" && (/^#[0-9A-F]{6}$/i.test(val2))){
+                val[params.prop+"color"] = val2;//hex version
+                val[params.prop+"opacity"] = 1;
+              } else if(typeof val2 === "object" && val2 && val2.r){
+                val2.r = (+val2.r).toString(16);
+                val2.r = (val2.r.length == 1 ? "0" + val2.r : val2.r);
+                val2.g = (+val2.g).toString(16);
+                val2.g = (val2.g.length == 1 ? "0" + val2.g : val2.g);
+                val2.b = (+val2.b).toString(16);
+                val2.b = (val2.b.length == 1 ? "0" + val2.b : val2.b);
+                val[params.prop+"color"] = "#"+val2.r + val2.g + val2.b;
+                val[params.prop+"opacity"] = (val2.a ? val2.a : 1);
+              } else {
+                err2 = err2.concat(error("Argument is not a valid color.", node.elts[1]));
+              }
+            }
+            resume([].concat(err).concat(err2), val);
+          });
+        } else {
+          resume([].concat(err), val);
+        }
       }
-      resume([].concat(err), val);
     });
+  }
+  function bar(node, options, resume){
+    let params = {
+      op: "default",
+      prop: "graphtype",
+      val: "bar"
+    };
+    set(node, options, function (err, val) {
+      resume([].concat(err), val);
+    }, params);
   }
   function radial(node, options, resume){
-    visit(node.elts[0], options, function (err, val) {
-      if(typeof val !== "object" || !val){
-        err = err.concat(error("Argument Goal invalid.", node.elts[0]));
-      } else if(!val.goal || !val.current){
-        err = err.concat(error("Argument Goal missing parameters.", node.elts[0]));
-      } else {//IS an object, ISN'T null, DOES have goal and current
-        val.graphtype = "rad";
-      }
+    let params = {
+      op: "default",
+      prop: "graphtype",
+      val: "rad"
+    };
+    set(node, options, function (err, val) {
       resume([].concat(err), val);
-    });
+    }, params);
   }
   function fraction(node, options, resume){
-    visit(node.elts[0], options, function (err, val) {
-      if(typeof val !== "object" || !val){
-        err = err.concat(error("Argument Goal invalid.", node.elts[0]));
-      } else if(!val.goal || !val.current){
-        err = err.concat(error("Argument Goal missing parameters.", node.elts[0]));
-      } else {//IS an object, ISN'T null, DOES have goal and current
-        val.texttype = "fraction";
-      }
+    let params = {
+      op: "default",
+      prop: "texttype",
+      val: "fraction"
+    };
+    set(node, options, function (err, val) {
       resume([].concat(err), val);
-    });
+    }, params);
   }
   function animate(node, options, resume) {
-    visit(node.elts[0], options, function (err1, val1) {
-      if(typeof val1 !== "object" || !val1){
-        err1 = err1.concat(error("Argument Goal invalid.", node.elts[0]));
-      } else if(!val1.goal || !val1.current){//size, transition, and color optional
-        err1 = err1.concat(error("Argument Goal missing parameters.", node.elts[0]));
-      }
-      visit(node.elts[1], options, function (err2, val2) {
-        if(isNaN(val2) || val2 < 0){
-          err2 = err2.concat(error("Argument must be a positive number.", node.elts[1]));
-        }
-        if(typeof val1 === "object" && val1){
-          val1.transition = val2;
-        }
-        resume([].concat(err1).concat(err2), val1);
-      });
-    });
+    let params = {
+      op: "positive",
+      prop: "transition"
+    };
+    set(node, options, function (err, val) {
+      resume([].concat(err), val);
+    }, params);
   }
   function size(node, options, resume) {
-    visit(node.elts[0], options, function (err1, val1) {
-      if(typeof val1 !== "object" || !val1){
-        err1 = err1.concat(error("Argument Goal invalid.", node.elts[0]));
-      } else if(!val1.goal || !val1.current){//size, transition, and color optional
-        err1 = err1.concat(error("Argument Goal missing parameters.", node.elts[0]));
-      }
-      visit(node.elts[1], options, function (err2, val2) {
-        if(isNaN(val2) || val2 < 0){
-          err2 = err2.concat(error("Argument must be a positive number.", node.elts[1]));
-        }
-        if(typeof val1 === "object" && val1){
-          val1.graphsize = val2;
-        }
-        resume([].concat(err1).concat(err2), val1);
-      });
-    });
+    let params = {
+      op: "positive",
+      prop: "graphsize"
+    };
+    set(node, options, function (err, val) {
+      resume([].concat(err), val);
+    }, params);
   }
   function thick(node, options, resume) {
-    visit(node.elts[0], options, function (err1, val1) {
-      if(typeof val1 !== "object" || !val1){
-        err1 = err1.concat(error("Argument Goal invalid.", node.elts[0]));
-      } else if(!val1.goal || !val1.current){//size, transition, and color optional
-        err1 = err1.concat(error("Argument Goal missing parameters.", node.elts[0]));
-      }
-      visit(node.elts[1], options, function (err2, val2) {
-        if(isNaN(val2) || val2 < 0){
-          err2 = err2.concat(error("Argument must be a positive number.", node.elts[1]));
-        }
-        if(typeof val1 === "object" && val1){
-          val1["thickness"] = val2;
-        }
-        resume([].concat(err1).concat(err2), val1);
-      });
-    });
+    let params = {
+      op: "positive",
+      prop: "thickness"
+    };
+    set(node, options, function (err, val) {
+      resume([].concat(err), val);
+    }, params);
   }
   function rotate(node, options, resume) {
-    visit(node.elts[0], options, function (err1, val1) {
-      if(typeof val1 !== "object" || !val1){
-        err1 = err1.concat(error("Argument Goal invalid.", node.elts[0]));
-      } else if(!val1.goal || !val1.current){//size, transition, and color optional
-        err1 = err1.concat(error("Argument Goal missing parameters.", node.elts[0]));
+    visit(node.elts[1], options, function (err2, val2) {
+      if(isNaN(val2)){
+        err2 = err2.concat(error("Argument must be a number.", node.elts[1]));
       }
-      visit(node.elts[1], options, function (err2, val2) {
-        if(isNaN(val2)){
-          err2 = err2.concat(error("Argument must be a number.", node.elts[1]));
-        }
-        if(typeof val1 === "object" && val1){
-          val1.rotation = val2;
-        }
+      let params = {
+        op: "default",
+        prop: "rotation",
+        val: val2
+      };
+      set(node, options, function (err1, val1) {
         resume([].concat(err1).concat(err2), val1);
-      });
+      }, params)
     });
   }
-  /*function hex(node, options, resume) {
-    visit(node.elts[0], options, function (err, val) {
-      //make a check for a valid hex color
-      if(!(/^#[0-9A-F]{6}$/i.test(val))){//There is a time and place for regex
-        err = err.concat(error("Argument must be a valid hex color.", node.elts[0]));
-      }//and that time is now
-      resume([].concat(err1).concat(err2), val);
-    });
-  }*/
-  function rgb(node, options, resume) {
+  function rgb(node, options, resume) {//0=b, 1=g, 2=r
     visit(node.elts[0], options, function (err1, val1) {
       if(isNaN(val1) || val1 < 0 || +val1 > 255){
         err1 = err1.concat(error("Argument must be between 0 and 255.", node.elts[0]));
@@ -276,8 +278,8 @@ let translate = (function() {
       });
     });
   };
-  function rgba(node, options, resume) {
-    visit(node.elts[0], options, function(err1, val1) {
+  function rgba(node, options, resume) {//0=a, 1=b, 2=g, 3=r
+    visit(node.elts[0], options, function (err1, val1) {
       if(isNaN(val1) || val1 < 0){
         err1 = err1.concat(error("Alpha must be a positive number.", node.elts[0]));
       } else {
@@ -287,99 +289,42 @@ let translate = (function() {
           val1 = 1;
         }
       }
-      visit(node.elts[1], options, function (err2, val2) {
-        if(isNaN(val2) || val2 < 0 || +val2 > 255){
-          err2 = err2.concat(error("Argument must be between 0 and 255.", node.elts[1]));
-        }
-        visit(node.elts[2], options, function (err3, val3) {
-          if(isNaN(val3) || val3 < 0 || +val3 > 255){
-            err3 = err3.concat(error("Argument must be between 0 and 255.", node.elts[2]));
-          }
-          visit(node.elts[3], options, function (err4, val4) {
-            if(isNaN(val4) || val4 < 0 || +val4 > 255){
-              err4 = err4.concat(error("Argument must be between 0 and 255.", node.elts[3]));
-            }        
-            let ret = {
-              r: val4,
-              g: val3,
-              b: val2,
-              a: val1
-            }
-            resume([].concat(err1).concat(err2).concat(err3).concat(err4), ret);
-          });
-        });
+      let test = node.elts.shift();
+      rgb(node, options, function (err2, val2) {//just run RGB and add alpha
+        val2.a = val1;
+        node.elts.unshift(test);
+        resume([].concat(err1).concat(err2), val2);
       });
     });
   }
   function fill(node, options, resume) {//first parameter is, of course, goal, second is color
-    visit(node.elts[0], options, function (err1, val1) {
-      if(typeof val1 !== "object" || !val1){
-        err1 = err1.concat(error("Argument Goal invalid.", node.elts[0]));
-      } else if(!val1.goal || !val1.current){
-        err1 = err1.concat(error("Argument Goal missing parameters.", node.elts[0]));
-      }
-      visit(node.elts[1], options, function (err2, val2) {
-        if(typeof val1 === "object" && val1){
-          if(typeof val2 === "string" && (/^#[0-9A-F]{6}$/i.test(val2))){
-            val1.graphcolor = val2;//hex version
-          } else if(typeof val2 === "object" && val2 && val2.r){
-            val2.r = (+val2.r).toString(16);
-            val2.r = (val2.r.length == 1 ? "0" + val2.r : val2.r);
-            val2.g = (+val2.g).toString(16);
-            val2.g = (val2.g.length == 1 ? "0" + val2.g : val2.g);
-            val2.b = (+val2.b).toString(16);
-            val2.b = (val2.b.length == 1 ? "0" + val2.b : val2.b);
-            val1.graphcolor = "#"+val2.r + val2.g + val2.b;
-            val1.graphopacity = (val2.a ? val2.a : 1);
-          } else {
-            err2 = err2.concat(error("Argument is not a valid color.", node.elts[1]));
-          }
-        }
-        resume([].concat(err1).concat(err2), val1);
-      });
-    });
+    let params = {
+      op: "color",
+      prop: "graph"
+    };
+    set(node, options, function (err, val) {
+      resume([].concat(err), val);
+    }, params);
   }
   function barback(node, options, resume) {
-    visit(node.elts[0], options, function (err1, val1) {
-      if(typeof val1 !== "object" || !val1){
-        err1 = err1.concat(error("Argument Goal invalid.", node.elts[0]));
-      } else if(!val1.goal || !val1.current){
-        err1 = err1.concat(error("Argument Goal missing parameters.", node.elts[0]));
-      }
-      visit(node.elts[1], options, function (err2, val2) {
-        if(typeof val1 === "object" && val1){
-          if(typeof val2 === "string" && (/^#[0-9A-F]{6}$/i.test(val2))){
-            val1.graphcolor = val2;
-          } else if(typeof val2 === "object" && val2 && val2.r){
-            val2.r = (+val2.r).toString(16);
-            val2.r = (val2.r.length == 1 ? "0" + val2.r : val2.r);
-            val2.g = (+val2.g).toString(16);
-            val2.g = (val2.g.length == 1 ? "0" + val2.g : val2.g);
-            val2.b = (+val2.b).toString(16);
-            val2.b = (val2.b.length == 1 ? "0" + val2.b : val2.b);
-            val1.backcolor = "#"+val2.r + val2.g + val2.b;
-            val1.backopacity = (val2.a ? val2.a : 1);
-          } else {
-            err2 = err2.concat(error("Argument is not a valid color.", node.elts[1]));
-          }
-        }
-        resume([].concat(err1).concat(err2), val1);
-      });
-    });
+    let params = {
+      op: "color",
+      prop: "back"
+    };
+    set(node, options, function (err, val) {
+      resume([].concat(err), val);
+    }, params);
   }
   function style(node, options, resume) {
-    visit(node.elts[0], options, function (err1, val1) {
-      visit(node.elts[1], options, function (err2, val2) {
-        if(typeof val1 === "object" && val1 && val1.goal && val1.current){
-          val1.style = val2;
-          resume([].concat(err1).concat(err2), val1);
-        } else {
-          resume([].concat(err1).concat(err2), {
-            value: val1,
-            style: val2,
-          });
-        }
-      });
+    visit(node.elts[1], options, function (err2, val2) {
+      let params = {
+        op: "default",
+        prop: "style",
+        val: val2
+      };
+      set(node, options, function (err1, val1) {
+        resume([].concat(err1).concat(err2), val1);
+      }, params)
     });
   };
   function list(node, options, resume) {
