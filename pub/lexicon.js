@@ -26,4 +26,5 @@ exports.globalLexicon = {
     "bar-background" : { "tk": 0x01, "name": "BBGD", "cls": "function", "length": 2, "arity": 2},
     "fill" : { "tk": 0x01, "name": "FILL", "cls": "function", "length": 2, "arity": 2},
     "rgba" : { "tk": 0x01, "name": "RGBA", "cls": "function", "length": 4, "arity": 4},
+    "background" : { "tk": 0x01, "name": "BGD", "cls": "function", "length": 1, "arity": 1},
 }

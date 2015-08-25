@@ -327,6 +327,21 @@ let translate = (function() {
       }, params)
     });
   };
+  function background(node, options, resume) {
+    visit(node.elts[0], options, function (err, val){
+      let ret = {
+        bg: ""
+      };
+      if(typeof val === "string" && (/^#[0-9A-F]{6}$/i.test(val))){
+        ret.bg = val;//hex version
+      } else if(typeof val === "object" && val && val.r){
+        ret.bg = val;
+      } else {
+        err = err.concat(error("Argument is not a valid color.", node.elts[0]));
+      }
+      resume([].concat(err), ret);
+    });
+  }
   function list(node, options, resume) {
     //pre processing here
     exprs(node, options, function(err, val){
@@ -395,6 +410,7 @@ let translate = (function() {
     "BBGD" : barback,
     "FILL" : fill,
     "RGBA" : rgba,
+    "BGD" : background,
   }
   return translate;
 })();

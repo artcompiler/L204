@@ -4,6 +4,7 @@
 window.exports.viewer = (function () {
   function update(el, obj, src, pool) {
     maxwidth=0;
+    var bgcol = 'white';
     var gcObj = {
       goal: [],
       current: [],
@@ -51,6 +52,12 @@ window.exports.viewer = (function () {
             gcObj.graphsize = gcObj.graphsize.concat(element.graphsize ? +element.graphsize : 300);
             gcObj.thickness = gcObj.thickness.concat(element.thickness ? +element.thickness : 10);
           }
+        } else if(element.bg){
+          if(typeof element.bg === "object" && element.bg && element.bg.r){
+            bgcol = 'rgb(+'+ (+element.bg.r) +','+ (+element.bg.g) +','+ (+element.bg.b) +')';
+          } else {
+            bgcol = element.bg;
+          }
         }
       });
     }
@@ -62,6 +69,7 @@ window.exports.viewer = (function () {
       .remove();
     var bar = svgd.append("g");
     var rad = svgd.append("g");
+    svgd.style("background-color", bgcol);
     function styles(selection, these){
       these.forEach(function (p){
         selection
