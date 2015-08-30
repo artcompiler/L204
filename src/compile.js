@@ -240,6 +240,15 @@ let translate = (function() {
       resume([].concat(err), val);
     }, params);
   }
+  function rounding(node, options, resume) {
+    let params = {
+      op: "positive",
+      prop: "rounding"
+    };
+    set(node, options, function (err, val) {
+      resume([].concat(err), val);
+    }, params);
+  }
   function rotate(node, options, resume) {
     visit(node.elts[1], options, function (err2, val2) {
       if(isNaN(val2)){
@@ -248,7 +257,7 @@ let translate = (function() {
       let params = {
         op: "default",
         prop: "rotation",
-        val: val2
+        val: +val2
       };
       set(node, options, function (err1, val1) {
         resume([].concat(err1).concat(err2), val1);
@@ -411,6 +420,7 @@ let translate = (function() {
     "FILL" : fill,
     "RGBA" : rgba,
     "BGD" : background,
+    "ROUNDING" : rounding,
   }
   return translate;
 })();

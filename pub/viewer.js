@@ -21,6 +21,7 @@ window.exports.viewer = (function () {
       dec: [],
       texttype: [],
       style: [],
+      rounding: [],
       arcs: []
     };
     obj = JSON.parse(obj);
@@ -45,8 +46,9 @@ window.exports.viewer = (function () {
           gcObj.rotation = gcObj.rotation.concat(element.rotation ? +element.rotation : 0);
           gcObj.texttype = gcObj.texttype.concat(element.texttype ? element.texttype : 'percent');
           gcObj.style = gcObj.style.concat(element.style ? [element.style] : [[{key: "font-weight", val: 600}]]);
+          gcObj.rounding = gcObj.rounding.concat(element.rounding ? element.rounding : 0);
           if(element.graphtype && element.graphtype == "rad"){ 
-            gcObj.graphsize = gcObj.graphsize.concat(element.graphsize ? +element.graphsize : 30);
+            gcObj.graphsize = gcObj.graphsize.concat(element.graphsize ? +element.graphsize : 50);
             gcObj.thickness = gcObj.thickness.concat(element.thickness ? +element.thickness : 5);
           } else {
             gcObj.graphsize = gcObj.graphsize.concat(element.graphsize ? +element.graphsize : 300);
@@ -104,10 +106,12 @@ window.exports.viewer = (function () {
             }
           });
         y += Math.abs(Math.sin(gcObj.rotation[counter]*(Math.PI/180))*gcObj.graphsize[counter]/2);
-        bar.append("rect")
-          .attr("transform", "rotate("+gcObj.rotation[counter]+","+(x+gcObj.graphsize[counter]/2)+","+(y+gcObj.thickness[counter]/2)+")")
+        bar.append("rect")//back rectangle
+          .attr("transform", "rotate("+gcObj.rotation[counter]+","+(gcObj.graphsize[counter]/2)+","+(y)+")")
           .attr("x", x)
           .attr("y", y)
+          .attr("rx", gcObj.rounding[counter])
+          .attr("ry", gcObj.rounding[counter])
           .attr("width", gcObj.graphsize[counter])
           .attr("height", gcObj.thickness[counter])
           .attr("fill", gcObj.backcolor[counter])
@@ -116,11 +120,14 @@ window.exports.viewer = (function () {
         if(clamp > 1){
           clamp = 1;
         }
-        bar.append("rect")
-          .attr("transform", "rotate("+gcObj.rotation[counter]+","+(x+gcObj.graphsize[counter]/2)+","+(y+gcObj.thickness[counter]/2)+")")
+        var w = (gcObj.rounding[counter]*2 < gcObj.graphsize[counter]*clamp ? gcObj.rounding[counter]*2 : gcObj.graphsize[counter]*clamp);
+        bar.append("rect")//bar
+          .attr("transform", "rotate("+gcObj.rotation[counter]+","+(gcObj.graphsize[counter]/2)+","+(y)+")")
           .attr("x", x)
           .attr("y", y)
-          .attr("width", 0)
+          .attr("rx", gcObj.rounding[counter])
+          .attr("ry", gcObj.rounding[counter])
+          .attr("width", w)
           .attr("height", gcObj.thickness[counter])
           .attr("fill", gcObj.graphcolor[counter])
           .attr("fill-opacity", gcObj.graphopacity[counter])
@@ -128,7 +135,7 @@ window.exports.viewer = (function () {
           .duration(gcObj.transition[counter]*1000)
           .attr("width", gcObj.graphsize[counter]*clamp);
         y += Math.abs(Math.cos(gcObj.rotation[counter]*(Math.PI/180))*gcObj.thickness[counter])
-          + Math.abs(Math.sin(gcObj.rotation[counter]*(Math.PI/180))*gcObj.graphsize[counter]/2)+6;
+          + Math.abs(Math.sin(gcObj.rotation[counter]*(Math.PI/180))*gcObj.graphsize[counter]/2)+5;
         if(gcObj.graphsize[counter] + (finaltext.length+1)*fontsize/2 > maxwidth){
           maxwidth = gcObj.graphsize[counter] + (finaltext.length+1)*fontsize/2;
         }
@@ -143,7 +150,7 @@ window.exports.viewer = (function () {
           .startAngle(gcObj.rotation[counter] * (Math.PI/180))
           .endAngle((360+gcObj.rotation[counter]) * (Math.PI/180))
           .innerRadius(r)
-          .outerRadius(inr);
+          .outerRadius(inr)/*.cornerRadius(gcObj.rounding[counter])*/;
         rad.append("path")
           .attr("transform", "translate(" + (inr+x) + "," + y + ")")
           .attr("d", gcObj.arcs[counter])
@@ -197,8 +204,9 @@ window.exports.viewer = (function () {
         }
       }
     }
-    $(el).attr("height", y + "px");
-    $(el).attr("width", maxwidth + "px");
+    svgd
+      .attr("height", y + "px")
+      .attr("width", maxwidth + "px");
   }
   function capture(el) {
     var mySVG = $(el).html();
