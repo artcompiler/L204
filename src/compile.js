@@ -92,6 +92,112 @@ let translate = (function() {
       resume([].concat(err), (Math.round(val*100) / 100));
    });
   };
+  function data(node, options, resume) {//one value: an object or array thereof
+    visit(node.elts[0], options, function (err, val) {
+      var ret = {
+        goal: [],
+        current: [],
+        progress: [],
+        graphsize: 300,
+        graphcolor: 'green',
+        graphopacity: 1,
+        graphtype: 'bar',
+        backcolor: 'grey',
+        backopacity: 1,
+        transition: 0,
+        thickness: 10,
+        rotation: 0,
+        dec: [],
+        texttype: 'percent',
+        style: [{key: "font-weight", val: 600}],
+        rounding: 0,
+        arcs: []
+      };
+      if(!(val instanceof Array) || !val.length){
+        err = err.concat(error("Invalid parameters.", node.elts[0]));
+      } else {//it's an array in any case.
+        if(typeof val[0] === "object" && val[0].key && val[1].key){//one object (0 = goal, 1 = value)
+          if(val[0].key === "goal" && val[1].key === "value"){
+            var d = decprog(val[0].val, val[1].val);
+            ret.goal = ret.goal.concat(+d.goal);
+            ret.current = ret.current.concat(+d.value);
+            ret.progress = ret.progress.concat(d.progress);
+            ret.dec = ret.dec.concat(d.dec);
+          } else {
+            err = err.concat(error("Object missing parameters.", node.elts[0]));
+          }
+        } else if(val[0] instanceof Array && val[0].length){//array contains arrays itself
+          val.forEach(function (element, index, array) {//each one should be a goal object and value object
+            if(typeof element[0] === "object" && element[0].key && element[1].key){//one object (0 = goal, 1 = value)
+              if(element[0].key === "goal" && element[1].key === "value"){
+                var d = decprog(element[0].val, element[1].val);
+                ret.goal = ret.goal.concat(+d.goal);
+                ret.current = ret.current.concat(+d.value);
+                ret.progress = ret.progress.concat(d.progress);
+                ret.dec = ret.dec.concat(d.dec);
+              } else {
+                err = err.concat(error("Object at index "+index+" missing parameters.", node.elts[0]));
+              }
+            } else {
+              err = err.concat(error("Object at index "+index+" improperly formatted.", node.elts[0]));
+            }
+          });
+        }
+      }
+      /*if(typeof val === "object" && val){//one object
+        if(val.goal && val.value){
+          var d = decprog(val.goal, val.value);
+          ret.goal = ret.goal.concat(d.goal);
+          ret.current = ret.current.concat(d.value);
+          ret.progress = ret.progress.concat(d.progress);
+          ret.dec = ret.dec.concat(d.dec);
+        } else {
+          err = err.concat(error("Object missing parameters.", node.elts[0]));
+        }
+      } else if(val instanceof Array && val.length){
+        val.forEach(function (element, index, array){
+          if(element.goal && element.value){
+            var d = decprog(element.goal, element.value);
+            ret.goal = ret.goal.concat(d.goal);
+            ret.current = ret.current.concat(d.value);
+            ret.progress = ret.progress.concat(d.progress);
+            ret.dec = ret.dec.concat(d.dec);
+          } else {
+            err = err.concat(error("Object at index "+index+" missing parameters.", node.elts[0]));
+          }
+        });
+      }*/
+      resume([].concat(err), ret);
+    });
+  };
+  function decprog(goal, value){
+    var ret = {
+      goal: 0,
+      value: 0,
+      progress: 0,
+      dec: 0
+    };
+    var t = (value/goal)*100;
+    var test0 = (Math.floor(value) === value) ? 0 : value.toString().split(".")[1] || 0;
+    var test1 = (Math.floor(goal) === goal) ? 0 : goal.toString().split(".")[1] || 0;
+    if(test0){test0 = test0.length;}
+    if(test1){test1 = test1.length;}
+    ret.goal = (+goal).toFixed(4);
+    ret.value = (+value).toFixed(4);
+    test0 = (test0 > test1) ? test0 : test1;
+    if(test0 <= 0){
+      test0 = 0;
+      t = Math.round(t);
+    } else if(test0 <= 4){
+      t = +t.toFixed(test0);
+    } else {
+      t = +t.toFixed(4);
+      test0 = 4;
+    }
+    ret.progress = t;
+    ret.dec = test0;
+    return ret;
+  }
   function current(node, options, resume) {
     visit(node.elts[0], options, function (err, val) {
       val = +val;
@@ -140,7 +246,7 @@ let translate = (function() {
     visit(node.elts[0], options, function (err, val) {
       if(typeof val !== "object" || !val){
         err = err.concat(error("Argument Goal invalid.", node.elts[0]));
-      } else if(!val.goal || !val.current){
+      } else if(!val.goal || !val.current || !val.goal.length || !val.current.length){
         err = err.concat(error("Argument Goal missing parameters.", node.elts[0]));
       } else {
         if(params.op && params.op === "default"){
@@ -152,7 +258,7 @@ let translate = (function() {
               err2 = err2.concat(error("Argument must be a positive number.", node.elts[1]));
             }
             if(typeof val === "object" && val){
-              val[params.prop] = val2;
+              val[params.prop] = +val2;
             }
             resume([].concat(err).concat(err2), val);
           });
@@ -177,10 +283,9 @@ let translate = (function() {
             }
             resume([].concat(err).concat(err2), val);
           });
-        } else {
-          resume([].concat(err), val);
         }
       }
+      resume([].concat(err), val);
     });
   }
   function bar(node, options, resume){
@@ -190,6 +295,10 @@ let translate = (function() {
       val: "bar"
     };
     set(node, options, function (err, val) {
+      if(!err || !err.length){//assuming no error the check for valid goal is done
+        val.graphsize = 300;
+        val.thickness = 10;
+      }
       resume([].concat(err), val);
     }, params);
   }
@@ -200,6 +309,11 @@ let translate = (function() {
       val: "rad"
     };
     set(node, options, function (err, val) {
+      //after that we need to set graphsize and thickness
+      if(!err || !err.length){//assuming no error the check for valid goal is done
+        val.graphsize = 50;
+        val.thickness = 5;
+      }
       resume([].concat(err), val);
     }, params);
   }
@@ -253,6 +367,13 @@ let translate = (function() {
     visit(node.elts[1], options, function (err2, val2) {
       if(isNaN(val2)){
         err2 = err2.concat(error("Argument must be a number.", node.elts[1]));
+      } else {
+        while(+val2 >= 360){
+          val2 -= 360;
+        }//720 becomes 0, 390 becomes 30
+        while(+val2 < 0){
+          val2 += 360;
+        }//-90 becomes 270, -360 becomes 0
       }
       let params = {
         op: "default",
@@ -406,6 +527,7 @@ let translate = (function() {
     "MUL" : mul,
     "ADDD" : addD,
     "MULD" : mulD,
+    "DATA" : data,
     "GOAL" : goal,
     "CURRENT" : current,
     "BAR" : bar,

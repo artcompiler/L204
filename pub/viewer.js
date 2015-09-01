@@ -3,9 +3,8 @@
 /* Copyright (c) 2015, Jeff Dyer, Art Compiler LLC */
 window.exports.viewer = (function () {
   function update(el, obj, src, pool) {
-    maxwidth=0;
     var bgcol = 'white';
-    var gcObj = {
+    /*var gcObj = {
       goal: [],
       current: [],
       progress: [],
@@ -23,7 +22,8 @@ window.exports.viewer = (function () {
       style: [],
       rounding: [],
       arcs: []
-    };
+    };*/
+    var group = null;
     obj = JSON.parse(obj);
     if(!(obj.data instanceof(Array))){
       obj.data = [obj.data];//has just one element
@@ -33,27 +33,7 @@ window.exports.viewer = (function () {
     } else {
       obj.data.forEach(function(element, index, array){
         if(element.goal && element.current && element.progress){
-          gcObj.goal = gcObj.goal.concat(element.goal);
-          gcObj.current = gcObj.current.concat(element.current);
-          gcObj.progress = gcObj.progress.concat(element.progress);
-          gcObj.dec = gcObj.dec.concat(element.dec);
-          gcObj.graphtype = gcObj.graphtype.concat(element.graphtype ? element.graphtype : 'bar');
-          gcObj.graphcolor = gcObj.graphcolor.concat(element.graphcolor ? element.graphcolor : 'green');
-          gcObj.graphopacity = gcObj.graphopacity.concat(element.graphopacity ? element.graphopacity: 1);
-          gcObj.backcolor = gcObj.backcolor.concat(element.backcolor ? element.backcolor : 'grey');
-          gcObj.backopacity = gcObj.backopacity.concat(element.backopacity ? element.backopacity: 1);          
-          gcObj.transition = gcObj.transition.concat(element.transition ? +element.transition : 0);
-          gcObj.rotation = gcObj.rotation.concat(element.rotation ? +element.rotation : 0);
-          gcObj.texttype = gcObj.texttype.concat(element.texttype ? element.texttype : 'percent');
-          gcObj.style = gcObj.style.concat(element.style ? [element.style] : [[{key: "font-weight", val: 600}]]);
-          gcObj.rounding = gcObj.rounding.concat(element.rounding ? element.rounding : 0);
-          if(element.graphtype && element.graphtype == "rad"){ 
-            gcObj.graphsize = gcObj.graphsize.concat(element.graphsize ? +element.graphsize : 50);
-            gcObj.thickness = gcObj.thickness.concat(element.thickness ? +element.thickness : 5);
-          } else {
-            gcObj.graphsize = gcObj.graphsize.concat(element.graphsize ? +element.graphsize : 300);
-            gcObj.thickness = gcObj.thickness.concat(element.thickness ? +element.thickness : 10);
-          }
+          group = element;
         } else if(element.bg){
           if(typeof element.bg === "object" && element.bg && element.bg.r){
             bgcol = 'rgb(+'+ (+element.bg.r) +','+ (+element.bg.g) +','+ (+element.bg.b) +')';
@@ -69,8 +49,12 @@ window.exports.viewer = (function () {
     var svgd = d3.select(el);
     svgd.selectAll("g")
       .remove();
-    var bar = svgd.append("g");
-    var rad = svgd.append("g");
+    /*var bar = svgd.append("g");
+    var rad = svgd.append("g");*/
+    var gr = svgd.selectAll('rect')
+      .data(group.progress)
+      .enter()
+      .append('g');//a group for each 
     svgd.style("background-color", bgcol);
     function styles(selection, these){
       these.forEach(function (p){
@@ -78,67 +62,94 @@ window.exports.viewer = (function () {
           .style(p.key, p.val);
       });
     }
-    for(var counter = 0; counter < gcObj.goal.length; counter++){
-      if(gcObj.graphtype[counter] == 'bar'){
-        finaltext = ((gcObj.texttype[counter] == 'percent') ? (gcObj.progress[counter]+'%') : (gcObj.current[counter]+'/'+gcObj.goal[counter]));
-        fontsize = gcObj.thickness[counter]+1;
-        bar.append("text")
-          .datum(counter)
-          .attr("x", x+gcObj.graphsize[counter])
-          .attr("y", y+gcObj.thickness[counter])
-          .text(" ")
-          .style("font-size", fontsize+"px")
-          .call(styles, gcObj.style[counter])
-          .transition("bart"+counter)
-          .duration(gcObj.transition[counter]*1000)
-          .tween("text", function(d, ind, a){
-            if(gcObj.texttype[d] == 'percent'){
-              var it = d3.interpolate(0, gcObj.progress[d]);
-              return function(t){
-                this.textContent = (+(it(t).toFixed(gcObj.dec[d]))) + "%";
-              }
-            } else {
-              var i0 = d3.interpolate(0, gcObj.current[d]);
-              var i1 = d3.interpolate(0, gcObj.goal[d]);
-              return function(t){
-                this.textContent = (+(i0(t).toFixed(gcObj.dec[d]))) + "/" + (+(i1(t).toFixed(gcObj.dec[d])));
-              }
+    if(group.graphtype == 'bar'){
+      //NEW PLAN: rotate afterward so you can take into account the entirety of the graphs.
+      fontsize = group.thickness+1;
+      var finaltext = '';
+      var textwidth = 0;
+      gr.append("text")
+        .attr("x", group.graphsize)
+        .attr("y", function (d, i){return group.thickness + (group.thickness+5)*i;})
+        .text(" ")
+        .style("font-size", fontsize+"px")
+        .call(styles, group.style)
+        .transition(function (d, i){return "bart"+i;})
+        .duration(group.transition*1000)
+        .tween("text", function (d, i, a){
+          if(group.texttype == 'percent'){
+            var it = d3.interpolate(0, group.progress[i]);
+            return function (t){
+              this.textContent = (+(it(t).toFixed(group.dec[i]))) + "%";
             }
-          });
-        y += Math.abs(Math.sin(gcObj.rotation[counter]*(Math.PI/180))*gcObj.graphsize[counter]/2);
-        bar.append("rect")//back rectangle
-          .attr("transform", "rotate("+gcObj.rotation[counter]+","+(gcObj.graphsize[counter]/2)+","+(y)+")")
-          .attr("x", x)
-          .attr("y", y)
-          .attr("rx", gcObj.rounding[counter])
-          .attr("ry", gcObj.rounding[counter])
-          .attr("width", gcObj.graphsize[counter])
-          .attr("height", gcObj.thickness[counter])
-          .attr("fill", gcObj.backcolor[counter])
-          .attr("fill-opacity", gcObj.backopacity[counter]);
-        var clamp = (gcObj.current[counter]/gcObj.goal[counter]);
-        if(clamp > 1){
-          clamp = 1;
+          } else {
+            var i0 = d3.interpolate(0, group.current[i]);
+            var i1 = d3.interpolate(0, group.goal[i]);
+            return function (t){
+              this.textContent = (+(i0(t).toFixed(group.dec[i]))) + "/" + (+(i1(t).toFixed(group.dec[i])));
+            }
+          }
+        });
+      gr.append("rect")//one back rectangle per datum
+        .attr("x", 0)
+        .attr("y", function (d, i){ return (group.thickness+5)*i;})//go down by this much - again, in the relative sense.
+        .attr("rx", group.rounding)
+        .attr("ry", group.rounding)
+        .attr("width", group.graphsize)
+        .attr("height", group.thickness)
+        .attr("fill", group.backcolor)
+        .attr("fill-opacity", group.backopacity);
+      //no transition for the back ones.
+      var clamp = [];
+      gr.append("rect")//one per datum, again.
+          .attr("x", 0)
+          .attr("y", function (d, i){ return (group.thickness+5)*i;})//this is much easier now that I know I can get the index
+          .attr("rx", group.rounding)
+          .attr("ry", group.rounding)
+          .attr("width", function (d, i){
+            clamp = clamp.concat((group.current[i]/group.goal[i] > 1) ? 1 : group.current[i]/group.goal[i]);
+            return (group.rounding*2 < group.graphsize*clamp[i] ? group.rounding*2 : group.graphsize*clamp[i]);})
+          .attr("height", group.thickness)
+          .attr("fill", group.graphcolor)
+          .attr("fill-opacity", group.graphopacity)
+          .transition(function (d, i){return "bar"+i;})//if the function doesn't work figure out another naming convention
+          .duration(group.transition*1000)
+          .attr("width", function (d, i) {return group.graphsize*clamp[i];});
+      for(var v=0;v<group.goal.length;v++){
+        finaltext = ((group.texttype=='percent') ? (group.progress[v]+'%') : (group.current[v]+'/'+group.goal[v]));
+        if(finaltext.length > textwidth){
+          textwidth = finaltext.length;
         }
-        var w = (gcObj.rounding[counter]*2 < gcObj.graphsize[counter]*clamp ? gcObj.rounding[counter]*2 : gcObj.graphsize[counter]*clamp);
-        bar.append("rect")//bar
-          .attr("transform", "rotate("+gcObj.rotation[counter]+","+(gcObj.graphsize[counter]/2)+","+(y)+")")
-          .attr("x", x)
-          .attr("y", y)
-          .attr("rx", gcObj.rounding[counter])
-          .attr("ry", gcObj.rounding[counter])
-          .attr("width", w)
-          .attr("height", gcObj.thickness[counter])
-          .attr("fill", gcObj.graphcolor[counter])
-          .attr("fill-opacity", gcObj.graphopacity[counter])
-          .transition("bar"+counter)//if the duration is 0 this still goes flawlessly.
-          .duration(gcObj.transition[counter]*1000)
-          .attr("width", gcObj.graphsize[counter]*clamp);
-        y += Math.abs(Math.cos(gcObj.rotation[counter]*(Math.PI/180))*gcObj.thickness[counter])
-          + Math.abs(Math.sin(gcObj.rotation[counter]*(Math.PI/180))*gcObj.graphsize[counter]/2)+5;
-        if(gcObj.graphsize[counter] + (finaltext.length+1)*fontsize/2 > maxwidth){
-          maxwidth = gcObj.graphsize[counter] + (finaltext.length+1)*fontsize/2;
+      }
+      y = (group.thickness+5)*group.goal.length - 5;
+      x = group.graphsize+(textwidth+1)*(fontsize/2);
+      var xt = 0;
+      var yt = 0;
+      var cos = Math.abs(Math.cos(group.rotation*(Math.PI/180)));
+      var sin = Math.abs(Math.sin(group.rotation*(Math.PI/180)));
+      if(group.rotation > 90){
+        yt = cos*y;
+        if(group.rotation < 270){
+          xt += cos*x;
+        } else {
+          yt -= cos*y;
         }
+        if(group.rotation > 180){
+          yt += sin*x;
+        }
+      }
+      if(group.rotation < 180){
+        xt += sin*y;
+      }
+      gr
+        .attr("transform", "translate("+xt+","+yt+") rotate("+group.rotation+")");
+      svgd
+        .attr("height", (cos*y + sin*x) + "px")
+        .attr("width", (cos*x + sin*y) + "px");
+    } else if(group.graphtype == 'rad'){
+
+    }
+    /*for(var counter = 0; counter < gcObj.goal.length; counter++){
+      if(gcObj.graphtype[counter] == 'bar'){
       } else if(gcObj.graphtype[counter] == 'rad'){
         var inr = gcObj.graphsize[counter];
         y += inr;
@@ -150,7 +161,7 @@ window.exports.viewer = (function () {
           .startAngle(gcObj.rotation[counter] * (Math.PI/180))
           .endAngle((360+gcObj.rotation[counter]) * (Math.PI/180))
           .innerRadius(r)
-          .outerRadius(inr)/*.cornerRadius(gcObj.rounding[counter])*/;
+          .outerRadius(inr).cornerRadius(gcObj.rounding[counter]);
         rad.append("path")
           .attr("transform", "translate(" + (inr+x) + "," + y + ")")
           .attr("d", gcObj.arcs[counter])
@@ -203,10 +214,7 @@ window.exports.viewer = (function () {
           maxwidth = inr*2;
         }
       }
-    }
-    svgd
-      .attr("height", y + "px")
-      .attr("width", maxwidth + "px");
+    }*/
   }
   function capture(el) {
     var mySVG = $(el).html();
