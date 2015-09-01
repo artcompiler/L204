@@ -13,8 +13,6 @@ exports.globalLexicon = {
     "addD" : { "tk": 0x01, "name": "ADDD", "cls": "function", "length": 2 , "arity": 2 },  
     "mulD" : { "tk": 0x01, "name": "MULD", "cls": "function", "length": 2 , "arity": 2 },
     "data" : { "tk" : 0x01, "name": "DATA", "cls": "function", "length": 1, "arity": 1 },
-    "goal" : { "tk": 0x01, "name": "GOAL", "cls": "function", "length": 2 , "arity": 2 },
-    "current" : { "tk": 0x01, "name": "CURRENT", "cls": "function", "length": 1 , "arity": 1 },
     "bar" : { "tk": 0x01, "name": "BAR", "cls": "function", "length": 1, "arity": 1},
     "radial" : { "tk": 0x01, "name": "RADIAL", "cls": "function", "length": 1, "arity": 1},
     "animate" : { "tk": 0x01, "name": "ANIMATE", "cls": "function", "length": 2, "arity": 2},

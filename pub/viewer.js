@@ -4,25 +4,6 @@
 window.exports.viewer = (function () {
   function update(el, obj, src, pool) {
     var bgcol = 'white';
-    /*var gcObj = {
-      goal: [],
-      current: [],
-      progress: [],
-      graphsize: [],
-      graphcolor: [],
-      graphopacity: [],
-      graphtype: [],
-      backcolor: [],
-      backopacity: [],
-      transition: [],
-      thickness: [],
-      rotation: [],
-      dec: [],
-      texttype: [],
-      style: [],
-      rounding: [],
-      arcs: []
-    };*/
     var group = null;
     obj = JSON.parse(obj);
     if(!(obj.data instanceof(Array))){
@@ -49,8 +30,6 @@ window.exports.viewer = (function () {
     var svgd = d3.select(el);
     svgd.selectAll("g")
       .remove();
-    /*var bar = svgd.append("g");
-    var rad = svgd.append("g");*/
     var gr = svgd.selectAll('rect')
       .data(group.progress)
       .enter()
@@ -63,7 +42,6 @@ window.exports.viewer = (function () {
       });
     }
     if(group.graphtype == 'bar'){
-      //NEW PLAN: rotate afterward so you can take into account the entirety of the graphs.
       fontsize = group.thickness+1;
       var finaltext = '';
       var textwidth = 0;
@@ -146,75 +124,75 @@ window.exports.viewer = (function () {
         .attr("height", (cos*y + sin*x) + "px")
         .attr("width", (cos*x + sin*y) + "px");
     } else if(group.graphtype == 'rad'){
-
-    }
-    /*for(var counter = 0; counter < gcObj.goal.length; counter++){
-      if(gcObj.graphtype[counter] == 'bar'){
-      } else if(gcObj.graphtype[counter] == 'rad'){
-        var inr = gcObj.graphsize[counter];
-        y += inr;
-        r = inr - gcObj.thickness[counter];
-        if(r<0){
-          r = 0;
-        }
-        gcObj.arcs[counter] = d3.svg.arc()
-          .startAngle(gcObj.rotation[counter] * (Math.PI/180))
-          .endAngle((360+gcObj.rotation[counter]) * (Math.PI/180))
-          .innerRadius(r)
-          .outerRadius(inr).cornerRadius(gcObj.rounding[counter]);
-        rad.append("path")
-          .attr("transform", "translate(" + (inr+x) + "," + y + ")")
-          .attr("d", gcObj.arcs[counter])
-          .attr("fill", gcObj.backcolor[counter])
-          .attr("fill-opacity", gcObj.backopacity[counter]);
-        finaltext = ((gcObj.texttype[counter] == 'percent') ? (gcObj.progress[counter]+'%') : (gcObj.current[counter]+'/'+gcObj.goal[counter]));
-        fontsize = (26-(2*finaltext.length))*(inr/30);
-        tex = rad.append("text")
-          .datum(counter)
-          .attr("class", "label")
-          .attr("x", x+inr)//before we had x+= inr, so it was -inr/2.
-          .attr("y", y + (fontsize/3))//before we DIDN'T have y+= inr, so it was +inr.
-          .text(" ")
-          .attr("text-anchor", "middle")
-          .style("font-size", Math.round(fontsize)+"px")
-          .call(styles, gcObj.style[counter])
-          .transition("radt"+counter)
-          .duration(gcObj.transition[counter]*1000)
-          .tween("text", function(d, ind, a){
-            if(gcObj.texttype[d] == 'percent'){
-              var it = d3.interpolate(0, gcObj.progress[d]);
-              return function(t){
-                this.textContent =(+(it(t).toFixed(gcObj.dec[d]))) + "%";
-              }
-            } else {
-              var i0 = d3.interpolate(0, gcObj.current[d]);
-              var i1 = d3.interpolate(0, gcObj.goal[d]);
-              return function(t){
-                this.textContent =(+(i0(t).toFixed(gcObj.dec[d]))) + "/" + (+(i1(t).toFixed(gcObj.dec[d])));
-              }
+      gr
+        .attr("transform", "translate(" + (group.graphsize) + "," + (group.graphsize) + ")");
+      fontsize = (group.graphsize/(5));
+      var finaltext = '';
+      var textwidth = 0;
+      gr.append("text")
+        .attr("x", group.graphsize)
+        .attr("y", function (d, i){return (-group.graphsize) + fontsize + (fontsize-1)*i;})
+        .text(" ")
+        .style("font-size", fontsize+"px")
+        .call(styles, group.style)
+        .transition(function (d, i){return "radt"+i;})
+        .duration(group.transition*1000)
+        .tween("text", function (d, i, a){
+          if(group.texttype == 'percent'){
+            var it = d3.interpolate(0, group.progress[i]);
+            return function (t){
+              this.textContent = (+(it(t).toFixed(group.dec[i]))) + "%";
             }
-          });
-        rad.append("path")
-          .datum(counter)
-          .attr("transform", "translate(" + (inr+x) + "," + y + ")")
-          .attr("d", gcObj.arcs[counter])
-          .attr("fill", gcObj.graphcolor[counter])
-          .attr("fill-opacity", gcObj.graphopacity[counter])
-          .transition("rad"+counter)
-          .duration(gcObj.transition[counter]*1000)
-          .attrTween("d", function(d, ind, a){
-            var i = d3.interpolate(gcObj.rotation[d]*(Math.PI/180), gcObj.rotation[d]*(Math.PI/180)+(360*(Math.PI/180))*(gcObj.current[d]/gcObj.goal[d]));
-
-            return function(t) {
-              return gcObj.arcs[d].endAngle(i(t))();
+          } else {
+            var i0 = d3.interpolate(0, group.current[i]);
+            var i1 = d3.interpolate(0, group.goal[i]);
+            return function (t){
+              this.textContent = (+(i0(t).toFixed(group.dec[i]))) + "/" + (+(i1(t).toFixed(group.dec[i])));
             }
-          });
-        y += inr+1;//offsets by other half so the next value if applicable starts at this point, and allows for one more pixel so they aren't too close
-        if(inr*2 > maxwidth){//each time, we check if the graph we just added is the widest. If so, it sets the bounding box width.
-          maxwidth = inr*2;
+          }
+        });
+      var r = group.graphsize - group.thickness;
+      if(r<0){r=0;}
+      var rot = group.rotation*(Math.PI/180);
+      var testarc = d3.svg.arc()
+        .startAngle(rot)
+        .endAngle((Math.PI*2)+rot)
+        .innerRadius(function (d, i){return r-(group.thickness*2)*i;})
+        .outerRadius(function (d, i){return group.graphsize-(group.thickness*2)*i;});
+      gr.append("path")
+        .attr("d", testarc)
+        .attr("fill", group.backcolor)
+        .attr("fill-opacity", group.backopacity);
+      gr.append("path")
+        .attr("d", function (d, i){//add a function to decrease size based on index as part of this
+          group.arcs[i] = d3.svg.arc()
+            .startAngle(rot)
+            .endAngle((Math.PI*2)+rot)
+            .innerRadius(function (d, i){return r-(group.thickness*2)*i;})
+            .outerRadius(function (d, i){return group.graphsize-(group.thickness*2)*i;});
+          return group.arcs[i](d, i);
+        })
+        .attr("fill", group.graphcolor)
+        .attr("fill-opacity", group.graphopacity)
+        .transition(function (d, i){return "rad"+i;})
+        .duration(group.transition*1000)
+        .attrTween("d", function (d, i){
+          var itp = d3.interpolate(rot, rot + (Math.PI*2)*(group.current[i]/group.goal[i]));
+
+          return function(t) {
+            return group.arcs[i].endAngle(itp(t))(d, i);
+          }
+        });
+      for(var v=0;v<group.goal.length;v++){
+        finaltext = ((group.texttype=='percent') ? (group.progress[v]+'%') : (group.current[v]+'/'+group.goal[v]));
+        if(finaltext.length > textwidth){
+          textwidth = finaltext.length;
         }
       }
-    }*/
+      svgd
+        .attr("height", group.graphsize*2 + "px")
+        .attr("width", (group.graphsize*2 + (textwidth+1)*(fontsize/2)) + "px");
+    }
   }
   function capture(el) {
     var mySVG = $(el).html();

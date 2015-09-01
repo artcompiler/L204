@@ -98,14 +98,14 @@ let translate = (function() {
         goal: [],
         current: [],
         progress: [],
-        graphsize: 300,
+        graphsize: 0,
         graphcolor: 'green',
         graphopacity: 1,
         graphtype: 'bar',
         backcolor: 'grey',
         backopacity: 1,
         transition: 0,
-        thickness: 10,
+        thickness: 0,
         rotation: 0,
         dec: [],
         texttype: 'percent',
@@ -144,29 +144,6 @@ let translate = (function() {
           });
         }
       }
-      /*if(typeof val === "object" && val){//one object
-        if(val.goal && val.value){
-          var d = decprog(val.goal, val.value);
-          ret.goal = ret.goal.concat(d.goal);
-          ret.current = ret.current.concat(d.value);
-          ret.progress = ret.progress.concat(d.progress);
-          ret.dec = ret.dec.concat(d.dec);
-        } else {
-          err = err.concat(error("Object missing parameters.", node.elts[0]));
-        }
-      } else if(val instanceof Array && val.length){
-        val.forEach(function (element, index, array){
-          if(element.goal && element.value){
-            var d = decprog(element.goal, element.value);
-            ret.goal = ret.goal.concat(d.goal);
-            ret.current = ret.current.concat(d.value);
-            ret.progress = ret.progress.concat(d.progress);
-            ret.dec = ret.dec.concat(d.dec);
-          } else {
-            err = err.concat(error("Object at index "+index+" missing parameters.", node.elts[0]));
-          }
-        });
-      }*/
       resume([].concat(err), ret);
     });
   };
@@ -197,50 +174,6 @@ let translate = (function() {
     ret.progress = t;
     ret.dec = test0;
     return ret;
-  }
-  function current(node, options, resume) {
-    visit(node.elts[0], options, function (err, val) {
-      val = +val;
-      if(isNaN(val) || val < 0){
-        err = err.concat(error("Argument must be a positive number.", node.elts[0]));
-      }
-      let value = {current: +val};
-      resume([].concat(err), value);
-    });
-  }
-  function goal(node, options, resume) {
-    visit(node.elts[0], options, function (err1, val1) {
-      if(typeof val1 !== "object" || !val1){
-        err1 = err1.concat(error("Argument Current invalid.", node.elts[0]));
-      }
-      visit(node.elts[1], options, function (err2, val2) {
-        if(isNaN(val2) || val2 < 0){
-          err2 = err2.concat(error("Argument must be a positive number.", node.elts[1]));
-        }
-        if(typeof val1 === "object" && val1){
-          val1.goal = +(+val2).toFixed(4);//the code will crash hard if it isn't
-          var t = (val1.current/val1.goal)*100;
-          var test0 = (Math.floor(val1.current) === val1.current) ? 0 : val1.current.toString().split(".")[1] || 0;
-          var test1 = (Math.floor(val2) === val2) ? 0 : val2.toString().split(".")[1] || 0;
-          if(test0){test0 = test0.length;}
-          if(test1){test1 = test1.length;}
-          val1.current = +val1.current.toFixed(4);
-          test0 = (test0 > test1) ? test0 : test1;
-          if(test0 <= 0){
-            test0 = 0;
-            t = Math.round(t);
-          } else if(test0 <= 4){
-            t = +t.toFixed(test0);
-          } else {
-            t = +t.toFixed(4);
-            test0 = 4;
-          }
-          val1.progress = (t);
-          val1.dec = test0;
-        }
-        resume([].concat(err1).concat(err2), val1);
-      });
-    });
   }
   function set(node, options, resume, params){
     visit(node.elts[0], options, function (err, val) {
@@ -296,8 +229,8 @@ let translate = (function() {
     };
     set(node, options, function (err, val) {
       if(!err || !err.length){//assuming no error the check for valid goal is done
-        val.graphsize = 300;
-        val.thickness = 10;
+        if(!val.graphsize){val.graphsize = 300;}
+        if(!val.thickness){val.thickness = 10;}
       }
       resume([].concat(err), val);
     }, params);
@@ -311,8 +244,8 @@ let translate = (function() {
     set(node, options, function (err, val) {
       //after that we need to set graphsize and thickness
       if(!err || !err.length){//assuming no error the check for valid goal is done
-        val.graphsize = 50;
-        val.thickness = 5;
+        if(!val.graphsize){val.graphsize = 50;}
+        if(!val.thickness){val.thickness = 5;}
       }
       resume([].concat(err), val);
     }, params);
@@ -528,8 +461,6 @@ let translate = (function() {
     "ADDD" : addD,
     "MULD" : mulD,
     "DATA" : data,
-    "GOAL" : goal,
-    "CURRENT" : current,
     "BAR" : bar,
     "RADIAL" : radial,
     "ANIMATE" : animate,
