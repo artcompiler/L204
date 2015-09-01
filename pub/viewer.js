@@ -151,6 +151,12 @@ window.exports.viewer = (function () {
             }
           }
         });
+      if(!group.thickness){//do some magic here to make thickness based on innerradius.
+        group.thickness = (group.graphsize - group.innerradius)/((group.goal.length-1)*2);
+        if(thickness < 0){
+          thickness = 5;
+        }
+      }
       var r = group.graphsize - group.thickness;
       if(r<0){r=0;}
       var rot = group.rotation*(Math.PI/180);

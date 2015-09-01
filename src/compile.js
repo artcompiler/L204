@@ -107,6 +107,7 @@ let translate = (function() {
         transition: 0,
         thickness: 0,
         rotation: 0,
+        innerradius: 0,
         dec: [],
         texttype: 'percent',
         style: [{key: "font-weight", val: 600}],
@@ -245,8 +246,8 @@ let translate = (function() {
       //after that we need to set graphsize and thickness
       if(!err || !err.length){//assuming no error the check for valid goal is done
         if(!val.graphsize){val.graphsize = 50;}
-        if(!val.thickness){val.thickness = 5;}
-      }
+        if(!val.thickness && !val.innerradius){val.thickness = 5;}//only set this if innerradius isn't
+      }//if thickness is already set we just roll with it, if innerradius alone is set we generate an ideal thickness
       resume([].concat(err), val);
     }, params);
   }
@@ -286,6 +287,29 @@ let translate = (function() {
     set(node, options, function (err, val) {
       resume([].concat(err), val);
     }, params);
+  }
+  function inner(node, options, resume){
+    visit(node.elts[1], options, function (err2, val2) {
+      let params = {
+        op: "positive",
+        prop: "innerradius"
+      };
+      set(node, options, function (err1, val1) {
+        if(val2 > val1.graphsize){
+          err2 = err2.concat(error("Inner radius must be less than outer.", node.elts[1]));
+        }
+        resume([].concat(err1).concat(err2), val1);
+      }, params)
+    });
+  }
+  function outer(node, options, resume){
+    let params = {
+      op: "positive",
+      prop: "graphsize"//yeah no outerradius and size are the same thing on radial.
+    };
+    set(node, options, function (err, val) {
+      resume([].concat(err), val);
+    }, params);    
   }
   function rounding(node, options, resume) {
     let params = {
@@ -474,6 +498,8 @@ let translate = (function() {
     "RGBA" : rgba,
     "BGD" : background,
     "ROUNDING" : rounding,
+    "INNER" : inner,
+    "OUTER" : outer,
   }
   return translate;
 })();
