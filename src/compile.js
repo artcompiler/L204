@@ -252,6 +252,15 @@ let translate = (function() {
       resume([].concat(err), val);
     }, params);
   }
+  function dividers(node, options, resume){
+    let params = {
+      op: "positive",
+      prop: "div"
+    };
+    set(node, options, function (err, val) {
+      resume([].concat(err), val);
+    }, params);
+  }
   function fraction(node, options, resume){
     let params = {
       op: "default",
@@ -529,6 +538,7 @@ let translate = (function() {
     "INNER" : inner,
     "OUTER" : outer,
     "LABELS" : labels,
+    "DIVIDERS": dividers,
   }
   return translate;
 })();

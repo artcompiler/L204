@@ -29,5 +29,6 @@ exports.globalLexicon = {
     "rounding" : { "tk": 0x01, "name": "ROUNDING", "cls": "function", "length": 2, "arity": 2},
     "inner-radius" : { "tk": 0x01, "name": "INNER", "cls": "function", "length": 2, "arity": 2},
     "outer-radius" : { "tk": 0x01, "name": "OUTER", "cls": "function", "length": 2, "arity": 2},
-    "labels" : { "tk": 0x01, "name": "LABELS", "cls": "function", "length": 2, "arity": 2},    
+    "labels" : { "tk": 0x01, "name": "LABELS", "cls": "function", "length": 2, "arity": 2},
+    "dividers" : { "tk": 0x01, "name": "DIVIDERS", "cls": "function", "length": 2, "arity": 2},       
 }

@@ -186,27 +186,94 @@ window.exports.viewer = (function () {
       gr.append("path")
         .attr("d", testarc)
         .attr("fill", group.backcolor)
-        .attr("fill-opacity", group.backopacity);
-      gr.append("path")
-        .attr("d", function (d, i){//add a function to decrease size based on index as part of this
-          group.arcs[i] = d3.svg.arc()
-            .startAngle(rot)
-            .endAngle((Math.PI*2)+rot)
-            .innerRadius(function (d, i){return r-(group.thickness*2)*i;})
-            .outerRadius(function (d, i){return group.graphsize-(group.thickness*2)*i;});
-          return group.arcs[i](d, i);
-        })
-        .attr("fill", group.graphcolor)
-        .attr("fill-opacity", group.graphopacity)
-        .transition(function (d, i){return "rad"+i;})
-        .duration(group.transition*1000)
-        .attrTween("d", function (d, i){
-          var itp = d3.interpolate(rot, rot + (Math.PI*2)*(group.current[i]/group.goal[i]));
-
-          return function(t) {
-            return group.arcs[i].endAngle(itp(t))(d, i);
+        .attr("fill-opacity", group.backopacity);//the back is actually the same with or without div
+      if(group.div){//nonzero divider set
+        var divrad = ((360/group.div)-2)*(Math.PI/180);//what fraction of a circle each divider is is important.
+        var point = [];//our start point.
+        var prog = [];
+        gr.append("path")//make the first set of dividers.
+          .attr("d", function (d, i){
+            curarc = d3.svg.arc()//just use this to set the desired points
+              .startAngle(function (d, i){point[i] = rot + (Math.PI/180); return point[i];})
+              .endAngle(function (d, i){return point[i] + divrad;})
+              .innerRadius(function (d, i){return r-(group.thickness*2)*i;})
+              .outerRadius(function (d, i){return group.graphsize-(group.thickness*2)*i;});
+            return curarc(d, i);
+          })
+          .attr("fill", group.graphcolor)
+          .attr("fill-opacity", 0)
+          .transition()
+          .duration(function (d, i){return group.transition*1000/(group.div*group.current[i]/group.goal[i]);})
+          .attr("fill-opacity", function (d, i){
+            prog[i] = group.current[i]/group.goal[i];
+            console.log("Prog at "+ i + " is "+ prog[i]);
+            var ch = (prog[i])*group.div;
+            if(ch>1){//larger than the divider
+              ch=1;
+            }
+            prog[i] -= (1/group.div);//decrease by divider fraction
+            return group.graphopacity*ch;
+          })
+          .each("end", function (e, i){return divi(e, i);});
+        
+        function divi (e, i){//recursion with a breakpoint!
+          console.log("Prog at "+ i + " is "+ prog[i]);
+          if(prog[i] > 0){//still need another, the last one didn't deplete it
+            point[i] += divrad + (Math.PI/90);//add two degrees along with starting on the next divider
+            var test = d3.select("g");
+            gr.append("path")//make a new set of dividers
+              .attr("d", function (d, ind){
+                curarc = d3.svg.arc()
+                  .startAngle(function (d){return point[i];})
+                  .endAngle(function (d){return point[i] + divrad;})
+                  .innerRadius(function (d){return r-(group.thickness*2)*i;})
+                  .outerRadius(function (d){return group.graphsize-(group.thickness*2)*i;});
+                return curarc(d, ind);
+              })
+              .attr("fill", group.graphcolor)
+              .attr("fill-opacity", 0)
+              .transition()
+              .duration(function (d){return group.transition*1000/(group.div*group.current[i]/group.goal[i]);})
+              .attr("fill-opacity", function (d, ind){
+                if(i==ind){
+                var ch = (prog[i])*group.div;
+                if(ch>1){//larger than the divider
+                  ch=1;
+                }
+                prog[i] -= (1/group.div);//decrease by divider fraction
+                return group.graphopacity*ch;} else return 0;
+              })
+              .each("end", function (e, ind){if(i==ind){return divi(e, i);} else return 0;});
           }
-        });
+        };
+        /*
+        We determine what fraction of the divider the progess 'fills'
+        We multiply the final opacity by that fraction, clamping to 1 if greater
+        If greater, we create the next divider in the same way.
+        */
+
+      } else {
+        gr.append("path")
+          .attr("d", function (d, i){//add a function to decrease size based on index as part of this
+            group.arcs[i] = d3.svg.arc()
+              .startAngle(rot)
+              .endAngle((Math.PI*2)+rot)
+              .innerRadius(function (d, i){return r-(group.thickness*2)*i;})
+              .outerRadius(function (d, i){return group.graphsize-(group.thickness*2)*i;});
+            return group.arcs[i](d, i);
+          })
+          .attr("fill", group.graphcolor)
+          .attr("fill-opacity", group.graphopacity)
+          .transition(function (d, i){return "rad"+i;})
+          .duration(group.transition*1000)
+          .attrTween("d", function (d, i){
+            var itp = d3.interpolate(rot, rot + (Math.PI*2)*(group.current[i]/group.goal[i]));
+
+            return function(t) {
+              return group.arcs[i].endAngle(itp(t))(d, i);
+            }
+          });
+      }
       svgd
         .attr("height", group.graphsize*2 + "px")
         .attr("width", (group.graphsize*2 + (textwidth+1)*(fontsize/2)) + "px");
