@@ -45,28 +45,38 @@ window.exports.viewer = (function () {
       fontsize = group.thickness+1;
       var finaltext = '';
       var textwidth = 0;
-      gr.append("text")
-        .attr("x", group.graphsize)
-        .attr("y", function (d, i){return group.thickness + (group.thickness+5)*i;})
-        .text(" ")
-        .style("font-size", fontsize+"px")
-        .call(styles, group.style)
-        .transition(function (d, i){return "bart"+i;})
-        .duration(group.transition*1000)
-        .tween("text", function (d, i, a){
-          if(group.texttype == 'percent'){
-            var it = d3.interpolate(0, group.progress[i]);
-            return function (t){
-              this.textContent = (+(it(t).toFixed(group.dec[i]))) + "%";
+      if(group.labels == 'off'){
+        fontsize = 0;
+      } else {
+        gr.append("text")
+          .attr("x", group.graphsize)
+          .attr("y", function (d, i){return group.thickness + (group.thickness+5)*i;})
+          .text(" ")
+          .style("font-size", fontsize+"px")
+          .call(styles, group.style)
+          .transition(function (d, i){return "bart"+i;})
+          .duration(group.transition*1000)
+          .tween("text", function (d, i, a){
+            if(group.texttype == 'percent'){
+              var it = d3.interpolate(0, group.progress[i]);
+              return function (t){
+                this.textContent = (+(it(t).toFixed(group.dec[i]))) + "%";
+              }
+            } else {
+              var i0 = d3.interpolate(0, group.current[i]);
+              var i1 = d3.interpolate(0, group.goal[i]);
+              return function (t){
+                this.textContent = (+(i0(t).toFixed(group.dec[i]))) + "/" + (+(i1(t).toFixed(group.dec[i])));
+              }
             }
-          } else {
-            var i0 = d3.interpolate(0, group.current[i]);
-            var i1 = d3.interpolate(0, group.goal[i]);
-            return function (t){
-              this.textContent = (+(i0(t).toFixed(group.dec[i]))) + "/" + (+(i1(t).toFixed(group.dec[i])));
-            }
+          });
+        for(var v=0;v<group.goal.length;v++){
+          finaltext = ((group.texttype=='percent') ? (group.progress[v]+'%') : (group.current[v]+'/'+group.goal[v]));
+          if(finaltext.length > textwidth){
+            textwidth = finaltext.length;
           }
-        });
+        }
+      }
       gr.append("rect")//one back rectangle per datum
         .attr("x", 0)
         .attr("y", function (d, i){ return (group.thickness+5)*i;})//go down by this much - again, in the relative sense.
@@ -92,12 +102,6 @@ window.exports.viewer = (function () {
           .transition(function (d, i){return "bar"+i;})//if the function doesn't work figure out another naming convention
           .duration(group.transition*1000)
           .attr("width", function (d, i) {return group.graphsize*clamp[i];});
-      for(var v=0;v<group.goal.length;v++){
-        finaltext = ((group.texttype=='percent') ? (group.progress[v]+'%') : (group.current[v]+'/'+group.goal[v]));
-        if(finaltext.length > textwidth){
-          textwidth = finaltext.length;
-        }
-      }
       y = (group.thickness+5)*group.goal.length - 5;
       x = group.graphsize+(textwidth+1)*(fontsize/2);
       var xt = 0;
@@ -129,28 +133,42 @@ window.exports.viewer = (function () {
       fontsize = (group.graphsize/(5));
       var finaltext = '';
       var textwidth = 0;
-      gr.append("text")
-        .attr("x", group.graphsize)
-        .attr("y", function (d, i){return (-group.graphsize) + fontsize + (fontsize-1)*i;})
-        .text(" ")
-        .style("font-size", fontsize+"px")
-        .call(styles, group.style)
-        .transition(function (d, i){return "radt"+i;})
-        .duration(group.transition*1000)
-        .tween("text", function (d, i, a){
-          if(group.texttype == 'percent'){
-            var it = d3.interpolate(0, group.progress[i]);
-            return function (t){
-              this.textContent = (+(it(t).toFixed(group.dec[i]))) + "%";
-            }
-          } else {
-            var i0 = d3.interpolate(0, group.current[i]);
-            var i1 = d3.interpolate(0, group.goal[i]);
-            return function (t){
-              this.textContent = (+(i0(t).toFixed(group.dec[i]))) + "/" + (+(i1(t).toFixed(group.dec[i])));
-            }
+      if(group.labels == 'off'){
+        fontsize = 0;
+      } else {
+        for(var v=0;v<group.goal.length;v++){
+          finaltext = ((group.texttype=='percent') ? (group.progress[v]+'%') : (group.current[v]+'/'+group.goal[v]));
+          if(finaltext.length > textwidth){
+            textwidth = finaltext.length;
           }
-        });
+        }
+        gr.append("text")
+          .attr("x", function (d, i){return (group.labels.endsWith("left")) ? (-group.graphsize - (textwidth+1)*(fontsize/2)) : group.graphsize;})
+          .attr("y", function (d, i){return (group.labels.startsWith("bottom")) ? group.graphsize - (fontsize-1)*i : (-group.graphsize) + fontsize + (fontsize-1)*i;})
+          .text(" ")
+          .style("font-size", fontsize+"px")
+          .call(styles, group.style)
+          .transition(function (d, i){return "radt"+i;})
+          .duration(group.transition*1000)
+          .tween("text", function (d, i, a){
+            if(group.texttype == 'percent'){
+              var it = d3.interpolate(0, group.progress[i]);
+              return function (t){
+                this.textContent = (+(it(t).toFixed(group.dec[i]))) + "%";
+              }
+            } else {
+              var i0 = d3.interpolate(0, group.current[i]);
+              var i1 = d3.interpolate(0, group.goal[i]);
+              return function (t){
+                this.textContent = (+(i0(t).toFixed(group.dec[i]))) + "/" + (+(i1(t).toFixed(group.dec[i])));
+              }
+            }
+          });
+        if(group.labels.endsWith("left")){
+          gr
+            .attr("transform", "translate(" + (group.graphsize + (textwidth+1)*(fontsize/2)) + "," + (group.graphsize) + ")");
+        }
+      }
       if(!group.thickness){//do some magic here to make thickness based on innerradius.
         group.thickness = (group.graphsize - group.innerradius)/((group.goal.length-1)*2);
         if(group.thickness < 0){
@@ -189,12 +207,6 @@ window.exports.viewer = (function () {
             return group.arcs[i].endAngle(itp(t))(d, i);
           }
         });
-      for(var v=0;v<group.goal.length;v++){
-        finaltext = ((group.texttype=='percent') ? (group.progress[v]+'%') : (group.current[v]+'/'+group.goal[v]));
-        if(finaltext.length > textwidth){
-          textwidth = finaltext.length;
-        }
-      }
       svgd
         .attr("height", group.graphsize*2 + "px")
         .attr("width", (group.graphsize*2 + (textwidth+1)*(fontsize/2)) + "px");

@@ -112,6 +112,7 @@ let translate = (function() {
         texttype: 'percent',
         style: [{key: "font-weight", val: 600}],
         rounding: 0,
+        labels: 'off',
         arcs: []
       };
       if(!(val instanceof Array) || !val.length){
@@ -298,6 +299,33 @@ let translate = (function() {
         if(val2 > val1.graphsize){
           err2 = err2.concat(error("Inner radius must be less than outer.", node.elts[1]));
         }
+        resume([].concat(err1).concat(err2), val1);
+      }, params)
+    });
+  }
+  let labeloptions = {
+    "on": "top right",
+    "left": "top left",
+    "top left": "top left",
+    "right": "top right",
+    "top right": "top right",
+    "bottom": "bottom right",
+    "bottom right": "bottom right",
+    "bottom left": "bottom left",
+    "off": "off"
+  };
+  function labels(node, options, resume){//0 is object, 1 is parameter
+    visit(node.elts[1], options, function (err2, val2) {
+      if(!labeloptions[val2]){
+        val2 = "off";
+        err2 = err2.concat(error("Invalid label option. Please try a direction such as 'top left'.", node.elts[1]));
+      }
+      let params = {
+        op: "default",
+        prop: "labels",
+        val: labeloptions[val2]
+      };
+      set(node, options, function (err1, val1) {
         resume([].concat(err1).concat(err2), val1);
       }, params)
     });
@@ -500,6 +528,7 @@ let translate = (function() {
     "ROUNDING" : rounding,
     "INNER" : inner,
     "OUTER" : outer,
+    "LABELS" : labels,
   }
   return translate;
 })();
