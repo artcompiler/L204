@@ -206,7 +206,6 @@ window.exports.viewer = (function () {
           .duration(function (d, i){return group.transition*1000/(group.div*group.current[i]/group.goal[i]);})
           .attr("fill-opacity", function (d, i){
             prog[i] = group.current[i]/group.goal[i];
-            console.log("Prog at "+ i + " is "+ prog[i]);
             var ch = (prog[i])*group.div;
             if(ch>1){//larger than the divider
               ch=1;
@@ -217,7 +216,6 @@ window.exports.viewer = (function () {
           .each("end", function (e, i){return divi(e, i);});
         
         function divi (e, i){//recursion with a breakpoint!
-          console.log("Prog at "+ i + " is "+ prog[i]);
           if(prog[i] > 0){//still need another, the last one didn't deplete it
             point[i] += divrad + (Math.PI/90);//add two degrees along with starting on the next divider
             var test = d3.select("g");
