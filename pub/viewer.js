@@ -27,6 +27,10 @@ window.exports.viewer = (function () {
     var y = 0;
     var x = 0;
     var r = 0;
+    var color = d3.scale.ordinal()
+      .range(group.graphcolor);
+    var backcolor = d3.scale.ordinal()
+      .range(group.backcolor);
     var svgd = d3.select(el);
     svgd.selectAll("g")
       .remove();
@@ -84,7 +88,7 @@ window.exports.viewer = (function () {
         .attr("ry", group.rounding)
         .attr("width", group.graphsize)
         .attr("height", group.thickness)
-        .attr("fill", group.backcolor)
+        .attr("fill", function (d, i){return backcolor(i);})
         .attr("fill-opacity", group.backopacity);
       //no transition for the back ones.
       var clamp = [];
@@ -97,7 +101,7 @@ window.exports.viewer = (function () {
             clamp = clamp.concat((group.current[i]/group.goal[i] > 1) ? 1 : group.current[i]/group.goal[i]);
             return (group.rounding*2 < group.graphsize*clamp[i] ? group.rounding*2 : group.graphsize*clamp[i]);})
           .attr("height", group.thickness)
-          .attr("fill", group.graphcolor)
+          .attr("fill", function (d, i){return color(i);})
           .attr("fill-opacity", group.graphopacity)
           .transition(function (d, i){return "bar"+i;})//if the function doesn't work figure out another naming convention
           .duration(group.transition*1000)
@@ -185,7 +189,7 @@ window.exports.viewer = (function () {
         .outerRadius(function (d, i){return group.graphsize-(group.thickness*2)*i;});
       gr.append("path")
         .attr("d", testarc)
-        .attr("fill", group.backcolor)
+        .attr("fill", function (d, i){return backcolor(i);})
         .attr("fill-opacity", group.backopacity);//the back is actually the same with or without div
       if(group.div){//nonzero divider set
         var divrad = ((360/group.div)-2)*(Math.PI/180);//what fraction of a circle each divider is is important.
@@ -200,7 +204,7 @@ window.exports.viewer = (function () {
               .outerRadius(function (d, i){return group.graphsize-(group.thickness*2)*i;});
             return curarc(d, i);
           })
-          .attr("fill", group.graphcolor)
+          .attr("fill", function (d, i){return color(i);})
           .attr("fill-opacity", 0)
           .transition()
           .duration(function (d, i){return group.transition*1000/(group.div*group.current[i]/group.goal[i]);})
@@ -228,7 +232,7 @@ window.exports.viewer = (function () {
                   .outerRadius(function (d){return group.graphsize-(group.thickness*2)*i;});
                 return curarc(d, ind);
               })
-              .attr("fill", group.graphcolor)
+              .attr("fill", function (d){return color(i);})
               .attr("fill-opacity", 0)
               .transition()
               .duration(function (d){return group.transition*1000/(group.div*group.current[i]/group.goal[i]);})
@@ -260,7 +264,7 @@ window.exports.viewer = (function () {
               .outerRadius(function (d, i){return group.graphsize-(group.thickness*2)*i;});
             return group.arcs[i](d, i);
           })
-          .attr("fill", group.graphcolor)
+          .attr("fill", function (d, i){return color(i);})
           .attr("fill-opacity", group.graphopacity)
           .transition(function (d, i){return "rad"+i;})
           .duration(group.transition*1000)
