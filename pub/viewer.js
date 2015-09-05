@@ -46,6 +46,9 @@ window.exports.viewer = (function () {
       });
     }
     if(group.graphtype == 'bar'){
+      if(group.gap == 'def'){
+        group.gap = 5;
+      }
       fontsize = group.thickness+1;
       var finaltext = '';
       var textwidth = 0;
@@ -54,7 +57,7 @@ window.exports.viewer = (function () {
       } else {
         gr.append("text")
           .attr("x", group.graphsize)
-          .attr("y", function (d, i){return group.thickness + (group.thickness+5)*i;})
+          .attr("y", function (d, i){return group.thickness + (group.thickness+group.gap)*i;})
           .text(" ")
           .style("font-size", fontsize+"px")
           .call(styles, group.style)
@@ -83,7 +86,7 @@ window.exports.viewer = (function () {
       }
       gr.append("rect")//one back rectangle per datum
         .attr("x", 0)
-        .attr("y", function (d, i){ return (group.thickness+5)*i;})//go down by this much - again, in the relative sense.
+        .attr("y", function (d, i){ return (group.thickness+group.gap)*i;})//go down by this much - again, in the relative sense.
         .attr("rx", group.rounding)
         .attr("ry", group.rounding)
         .attr("width", group.graphsize)
@@ -94,7 +97,7 @@ window.exports.viewer = (function () {
       var clamp = [];
       gr.append("rect")//one per datum, again.
           .attr("x", 0)
-          .attr("y", function (d, i){ return (group.thickness+5)*i;})//this is much easier now that I know I can get the index
+          .attr("y", function (d, i){ return (group.thickness+group.gap)*i;})//this is much easier now that I know I can get the index
           .attr("rx", group.rounding)
           .attr("ry", group.rounding)
           .attr("width", function (d, i){
@@ -106,7 +109,7 @@ window.exports.viewer = (function () {
           .transition(function (d, i){return "bar"+i;})//if the function doesn't work figure out another naming convention
           .duration(group.transition*1000)
           .attr("width", function (d, i) {return group.graphsize*clamp[i];});
-      y = (group.thickness+5)*group.goal.length - 5;
+      y = (group.thickness+group.gap)*group.goal.length - group.gap;
       x = group.graphsize+(textwidth+1)*(fontsize/2);
       var xt = 0;
       var yt = 0;
@@ -150,11 +153,11 @@ window.exports.viewer = (function () {
         var ty = (group.labels.startsWith("bottom")) ? group.graphsize : (-group.graphsize) + fontsize;
         if(group.labels == "center"){
           tx = 0;
-          ty = fontsize/3;
+          ty = fontsize*(2/3) - (fontsize-1)*group.goal.length/2;
           textwidth = 0;
         }
         gr.append("text")
-          .attr("x", tx)
+          .attr("x", tx)//shifts down by fontsize-1 for each so center shifts up by half
           .attr("y", function (d, i){return (group.labels.startsWith("bottom")) ? ty - (fontsize-1)*i : ty + (fontsize-1)*i;})
           .text(" ")
           .attr("text-anchor", (group.labels == 'center') ? "middle" : "left")
@@ -187,14 +190,17 @@ window.exports.viewer = (function () {
           group.thickness = 5;
         }
       }
+      if(group.gap == 'def' && !group.innerradius){
+        group.gap = group.thickness;
+      }
       var r = group.graphsize - group.thickness;
       if(r<0){r=0;}
       var rot = group.rotation*(Math.PI/180);
       var testarc = d3.svg.arc()
         .startAngle(rot)
         .endAngle((Math.PI*2)+rot)
-        .innerRadius(function (d, i){return r-(group.thickness*2)*i;})
-        .outerRadius(function (d, i){return group.graphsize-(group.thickness*2)*i;});
+        .innerRadius(function (d, i){return r-(group.thickness+group.gap)*i;})
+        .outerRadius(function (d, i){return group.graphsize-(group.thickness+group.gap)*i;});
       gr.append("path")
         .attr("d", testarc)
         .attr("fill", function (d, i){return backcolor(i);})
@@ -212,8 +218,8 @@ window.exports.viewer = (function () {
             curarc = d3.svg.arc()//just use this to set the desired points
               .startAngle(function (d, i){point[i] = rot + group.divwidth*(Math.PI/360); return point[i];})
               .endAngle(function (d, i){return point[i] + divrad;})
-              .innerRadius(function (d, i){return r-(group.thickness*2)*i;})
-              .outerRadius(function (d, i){return group.graphsize-(group.thickness*2)*i;});
+              .innerRadius(function (d, i){return r-(group.gap+group.thickness)*i;})
+              .outerRadius(function (d, i){return group.graphsize-(group.gap+group.thickness)*i;});
             return curarc(d, i);
           })
           .attr("fill", function (d, i){return color(i);})
@@ -240,8 +246,8 @@ window.exports.viewer = (function () {
                 curarc = d3.svg.arc()
                   .startAngle(function (d){return point[i];})
                   .endAngle(function (d){return point[i] + divrad;})
-                  .innerRadius(function (d){return r-(group.thickness*2)*i;})
-                  .outerRadius(function (d){return group.graphsize-(group.thickness*2)*i;});
+                  .innerRadius(function (d){return r-(group.gap+group.thickness)*i;})
+                  .outerRadius(function (d){return group.graphsize-(group.gap+group.thickness)*i;});
                 return curarc(d, ind);
               })
               .attr("fill", function (d){return color(i);})
@@ -266,8 +272,8 @@ window.exports.viewer = (function () {
             group.arcs[i] = d3.svg.arc()
               .startAngle(rot)
               .endAngle((Math.PI*2)+rot)
-              .innerRadius(function (d, i){return r-(group.thickness*2)*i;})
-              .outerRadius(function (d, i){return group.graphsize-(group.thickness*2)*i;});
+              .innerRadius(function (d, i){return r-(group.gap+group.thickness)*i;})
+              .outerRadius(function (d, i){return group.graphsize-(group.gap+group.thickness)*i;});
             return group.arcs[i](d, i);
           })
           .attr("fill", function (d, i){return color(i);})

@@ -409,6 +409,7 @@ let translate = (function() {
         rotation: 0,
         innerradius: 0,
         divwidth: 2,
+        gap: 'def',
         dec: [],
         texttype: 'percent',
         style: [{key: "font-weight", val: 600}],
@@ -587,6 +588,15 @@ let translate = (function() {
     let params = {
       op: "positive",
       prop: "thickness"
+    };
+    set(node, options, function (err, val) {
+      resume([].concat(err), val);
+    }, params);
+  }
+  function gap(node, options, resume) {
+    let params = {
+      op: "positive",
+      prop: "gap"
     };
     set(node, options, function (err, val) {
       resume([].concat(err), val);
@@ -931,6 +941,7 @@ let translate = (function() {
     "DIVIDERS": dividers,
     "DIVWIDTH" : divwidth,
     "BREWER" : brewer,
+    "GAP" : gap,
   }
   return translate;
 })();
