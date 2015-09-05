@@ -146,10 +146,18 @@ window.exports.viewer = (function () {
             textwidth = finaltext.length;
           }
         }
+        var tx = (group.labels.endsWith("left")) ? (-group.graphsize - (textwidth+1)*(fontsize/2)) : group.graphsize;
+        var ty = (group.labels.startsWith("bottom")) ? group.graphsize : (-group.graphsize) + fontsize;
+        if(group.labels == "center"){
+          tx = 0;
+          ty = fontsize/3;
+          textwidth = 0;
+        }
         gr.append("text")
-          .attr("x", function (d, i){return (group.labels.endsWith("left")) ? (-group.graphsize - (textwidth+1)*(fontsize/2)) : group.graphsize;})
-          .attr("y", function (d, i){return (group.labels.startsWith("bottom")) ? group.graphsize - (fontsize-1)*i : (-group.graphsize) + fontsize + (fontsize-1)*i;})
+          .attr("x", tx)
+          .attr("y", function (d, i){return (group.labels.startsWith("bottom")) ? ty - (fontsize-1)*i : ty + (fontsize-1)*i;})
           .text(" ")
+          .attr("text-anchor", (group.labels == 'center') ? "middle" : "left")
           .style("font-size", fontsize+"px")
           .call(styles, group.style)
           .transition(function (d, i){return "radt"+i;})

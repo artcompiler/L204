@@ -631,7 +631,8 @@ let translate = (function() {
     "bottom": "bottom right",
     "bottom right": "bottom right",
     "bottom left": "bottom left",
-    "off": "off"
+    "off": "off",
+    "center": "center",
   };
   function labels(node, options, resume){//0 is object, 1 is parameter
     visit(node.elts[1], options, function (err2, val2) {
@@ -645,6 +646,9 @@ let translate = (function() {
         val: labeloptions[val2]
       };
       set(node, options, function (err1, val1) {
+      	if(val2 == "on" && val1.goal.length == 1){
+      		val1.labels = "center";
+      	}
         resume([].concat(err1).concat(err2), val1);
       }, params)
     });
