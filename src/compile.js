@@ -408,6 +408,7 @@ let translate = (function() {
         thickness: 0,
         rotation: 0,
         innerradius: 0,
+        divwidth: 2,
         dec: [],
         texttype: 'percent',
         style: [{key: "font-weight", val: 600}],
@@ -605,6 +606,22 @@ let translate = (function() {
       }, params)
     });
   }
+  function divwidth(node, options, resume){
+    visit(node.elts[1], options, function (err2, val2) {
+      let params = {
+        op: "positive",
+        prop: "divwidth"
+      };
+      set(node, options, function (err1, val1) {
+      	//18 at 20 dividers, 12 at 30 dividers, 36 at 10 dividers and the pattern becomes obvious.
+        if(val1.div && val2 >= 360/val1.div){
+          err2 = err2.concat(error("Dividers too large to fit.", node.elts[1]));
+        }
+        resume([].concat(err1).concat(err2), val1);
+      }, params)
+    });
+  }
+  
   let labeloptions = {
     "on": "top right",
     "left": "top left",
@@ -778,7 +795,7 @@ let translate = (function() {
         if(!colors[val]){
           err = err.concat(error("Unrecognized color, please use lower case.", node.elts[0]));
         } else {
-          if(isNaN(val2) || +val2 < 0 || +val2 > 9){
+          if(isNaN(val2) || typeof colorbrewer[colors[val]][+val2] == 'undefined'){
             err2 = err2.concat(error("Invalid size parameter.", node.elts[1]));
           } else {
             ret = colorbrewer[colors[val]][+val2];
@@ -908,6 +925,7 @@ let translate = (function() {
     "OUTER" : outer,
     "LABELS" : labels,
     "DIVIDERS": dividers,
+    "DIVWIDTH" : divwidth,
     "BREWER" : brewer,
   }
   return translate;

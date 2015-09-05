@@ -191,14 +191,18 @@ window.exports.viewer = (function () {
         .attr("d", testarc)
         .attr("fill", function (d, i){return backcolor(i);})
         .attr("fill-opacity", group.backopacity);//the back is actually the same with or without div
+        /*
+        Consider making the div and non-div paths functions
+        so you can just call another shrunk by one thickness and subtracted by 100% for the second bar.
+        */
       if(group.div){//nonzero divider set
-        var divrad = ((360/group.div)-2)*(Math.PI/180);//what fraction of a circle each divider is is important.
+        var divrad = ((360/group.div)-group.divwidth)*(Math.PI/180);//what fraction of a circle each divider is is important.
         var point = [];//our start point.
         var prog = [];
         gr.append("path")//make the first set of dividers.
           .attr("d", function (d, i){
             curarc = d3.svg.arc()//just use this to set the desired points
-              .startAngle(function (d, i){point[i] = rot + (Math.PI/180); return point[i];})
+              .startAngle(function (d, i){point[i] = rot + group.divwidth*(Math.PI/360); return point[i];})
               .endAngle(function (d, i){return point[i] + divrad;})
               .innerRadius(function (d, i){return r-(group.thickness*2)*i;})
               .outerRadius(function (d, i){return group.graphsize-(group.thickness*2)*i;});
@@ -221,7 +225,7 @@ window.exports.viewer = (function () {
         
         function divi (e, i){//recursion with a breakpoint!
           if(prog[i] > 0){//still need another, the last one didn't deplete it
-            point[i] += divrad + (Math.PI/90);//add two degrees along with starting on the next divider
+            point[i] += divrad + group.divwidth*(Math.PI/180);//add divwidth degrees along with starting on the next divider
             var test = d3.select("g");
             gr.append("path")//make a new set of dividers
               .attr("d", function (d, ind){
@@ -248,12 +252,6 @@ window.exports.viewer = (function () {
               .each("end", function (e, ind){if(i==ind){return divi(e, i);} else return 0;});
           }
         };
-        /*
-        We determine what fraction of the divider the progess 'fills'
-        We multiply the final opacity by that fraction, clamping to 1 if greater
-        If greater, we create the next divider in the same way.
-        */
-
       } else {
         gr.append("path")
           .attr("d", function (d, i){//add a function to decrease size based on index as part of this

@@ -32,5 +32,6 @@ exports.globalLexicon = {
     "outer-radius" : { "tk": 0x01, "name": "OUTER", "cls": "function", "length": 2, "arity": 2},
     "labels" : { "tk": 0x01, "name": "LABELS", "cls": "function", "length": 2, "arity": 2},
     "dividers" : { "tk": 0x01, "name": "DIVIDERS", "cls": "function", "length": 2, "arity": 2},
+    "divider-width" : { "tk": 0x01, "name": "DIVWIDTH", "cls": "function", "length": 2, "arity": 2},
     "brewer" : { "tk": 0x01, "name": "BREWER", "cls": "function", "length": 2, "arity": 2},       
 }
