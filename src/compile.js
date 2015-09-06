@@ -302,6 +302,7 @@ var colorbrewer = {YlGn: {
 11: ["#8dd3c7","#ffffb3","#bebada","#fb8072","#80b1d3","#fdb462","#b3de69","#fccde5","#d9d9d9","#bc80bd","#ccebc5"],
 12: ["#8dd3c7","#ffffb3","#bebada","#fb8072","#80b1d3","#fdb462","#b3de69","#fccde5","#d9d9d9","#bc80bd","#ccebc5","#ffed6f"]
 }};
+var https = require('https')
 import {assert, message, messages, reserveCodeRange} from "./assert.js"
 
 reserveCodeRange(1000, 1999, "compile");
@@ -417,9 +418,9 @@ let translate = (function() {
         labels: 'off',
         arcs: []
       };
-      if(!(val instanceof Array) || !val.length){
+      if((!(val instanceof Array) && !(typeof val === 'string')) || !val.length ){
         err = err.concat(error("Invalid parameters.", node.elts[0]));
-      } else {//it's an array in any case.
+      } else if(val instanceof Array && val.length) {//it's an array in any case.
         if(typeof val[0] === "object" && val[0].key && val[1].key){//one object (0 = goal, 1 = value)
           if(val[0].key === "goal" && val[1].key === "value"){
             var d = decprog(val[0].val, val[1].val);
@@ -447,6 +448,8 @@ let translate = (function() {
             }
           });
         }
+      } else if(typeof val === 'string'){
+      	
       }
       resume([].concat(err), ret);
     });
