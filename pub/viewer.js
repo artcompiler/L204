@@ -212,13 +212,13 @@ window.exports.viewer = (function () {
                 if(!i){ir[i] = size-thickness;} else {
                   ir[i] = ir[i-1] - (gap+thickness);
                 }//start with the initial size, decrease by gap and thickness each time
-                if(i && Math.floor(group.progress[i-1]/100)){ir[i] -= thickness;}//and this if there's a secondary bar.
+                if(i && Math.floor(group.progress[i-1]/100) && group.secondary){ir[i] -= thickness;}//and this if there's a secondary bar.
                 return ir[i];})
               .outerRadius(function (d, i){
                 if(!i){or[i] = size;} else {
                   or[i] = or[i-1] - (gap+thickness);
                 }
-                if(i && Math.floor(group.progress[i-1]/100)){or[i] -= thickness;}
+                if(i && Math.floor(group.progress[i-1]/100) && group.secondary){or[i] -= thickness;}
                 return or[i];});
             return barc(d, i);              
           })
@@ -310,13 +310,13 @@ window.exports.viewer = (function () {
                 if(!i){ir[i] = size-thickness;} else {
                   ir[i] = ir[i-1] - (gap+thickness);
                 }//start with the initial size, decrease by gap and thickness each time
-                if(i && Math.floor(group.progress[i-1]/100)){ir[i] -= thickness;}//and this if there's a secondary bar.
+                if(i && Math.floor(group.progress[i-1]/100) && group.secondary){ir[i] -= thickness;}//and this if there's a secondary bar.
                 return ir[i];})
               .outerRadius(function (d, i){
                 if(!i){or[i] = size;} else {
                   or[i] = or[i-1] - (gap+thickness);
                 }
-                if(i && Math.floor(group.progress[i-1]/100)){or[i] -= thickness;}
+                if(i && Math.floor(group.progress[i-1]/100) && group.secondary){or[i] -= thickness;}
                 return or[i];});
             return barc(d, i);              
           })
