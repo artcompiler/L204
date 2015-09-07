@@ -606,6 +606,16 @@ let translate = (function() {
       resume([].concat(err), val);
     }, params);
   }
+  function secbar(node, options, resume){
+  	let params = {
+  		op: "default",
+  		prop: "secondary",
+  		val: true
+  	};
+    set(node, options, function (err, val) {
+      resume([].concat(err), val);
+    }, params);
+  };
   function animate(node, options, resume) {
     let params = {
       op: "positive",
@@ -983,6 +993,7 @@ let translate = (function() {
     "BREWER" : brewer,
     "GAP" : gap,
     "GET" : get,
+    "SECBAR" : secbar,
   }
   return translate;
 })();

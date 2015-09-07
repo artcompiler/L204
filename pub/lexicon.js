@@ -35,5 +35,6 @@ exports.globalLexicon = {
     "divider-width" : { "tk": 0x01, "name": "DIVWIDTH", "cls": "function", "length": 2, "arity": 2},
     "brewer" : { "tk": 0x01, "name": "BREWER", "cls": "function", "length": 2, "arity": 2},
     "gap" : { "tk": 0x01, "name": "GAP", "cls": "function", "length": 2, "arity": 2},   
-    "get" : { "tk" : 0x01, "name": "GET", "cls": "function", "length": 1, "arity": 1 },  
+    "get" : { "tk" : 0x01, "name": "GET", "cls": "function", "length": 1, "arity": 1 },
+    "secondary-bar" : { "tk": 0x01, "name": "SECBAR", "cls": "function", "length": 1, "arity": 1},  
 }

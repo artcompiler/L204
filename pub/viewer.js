@@ -196,7 +196,7 @@ window.exports.viewer = (function () {
       var r = group.graphsize - group.thickness;
       if(r<0){r=0;}
       var rot = group.rotation*(Math.PI/180);
-      var redfl = false;
+      var redfl = group.secondary;
       function raddiv (size, progress, gap, thickness, rot, delay, redflag) {
         var divrad = ((360/group.div)-group.divwidth)*(Math.PI/180);//number and width of dividers remains the same for inners.
         var point = [];
@@ -288,8 +288,13 @@ window.exports.viewer = (function () {
             progtest = true;
           }
         }
-        if(progtest && !redflag){//figure out how to delay until when it actually hits 100.
-          raddiv(size-thickness, np, gap, thickness, rot, delay+group.transition*800, true);
+        if(progtest){//figure out how to delay until when it actually hits 100.
+          if(redflag){
+            raddiv(size-thickness, np, gap, thickness, rot, delay+group.transition*800, false);
+          } else {
+            group.backopacity = 0;
+            raddiv(size, np, gap, thickness, rot, delay+group.transition*800, false);
+          }
         }
       };
       function raddi (size, progress, gap, thickness, rot, delay, redflag){
@@ -347,8 +352,13 @@ window.exports.viewer = (function () {
             progtest = true;
           }
         }
-        if(progtest && !redflag){//figure out how to delay until when it actually hits 100.
-          raddi(size-thickness, np, gap, thickness, rot, delay+group.transition*800, true);
+        if(progtest){//figure out how to delay until when it actually hits 100.
+          if(redflag){
+            raddi(size-thickness, np, gap, thickness, rot, delay+group.transition*800, false);
+          } else {
+            group.backopacity = 0;
+            raddi(size, np, gap, thickness, rot, delay+group.transition*800, false);
+          }
         }
       };
       if(group.div){//nonzero divider set
