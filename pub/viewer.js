@@ -196,34 +196,41 @@ window.exports.viewer = (function () {
       var r = group.graphsize - group.thickness;
       if(r<0){r=0;}
       var rot = group.rotation*(Math.PI/180);
-      var testarc = d3.svg.arc()
-        .startAngle(rot)
-        .endAngle((Math.PI*2)+rot)
-        .innerRadius(function (d, i){return r-(group.thickness+group.gap)*i;})
-        .outerRadius(function (d, i){return group.graphsize-(group.thickness+group.gap)*i;});
-      gr.append("path")
-        .attr("d", testarc)
-        .attr("fill", function (d, i){return backcolor(i);})
-        .attr("fill-opacity", group.backopacity);//the back is actually the same with or without div
-      /*
-      Consider making the div and non-div paths functions
-      so you can just call another with size dropped by one thickness and subtracted by 100% for the second bar.
-      By this point, you have thickness, gap, radius, and rotation as given.
-      Should take size and goal/current as an argument so size can be decreased by thickness for the second run.
-      With the problem of group data weirdness solved, this should be able to happen.
-      Make a check to make sure we don't bother running this with no gap.
-      */
-      function raddiv (size, progress, gap, thickness, rot, delay) {//gap and thickness are switched for secondaries. Guess why!
+      var redfl = false;
+      function raddiv (size, progress, gap, thickness, rot, delay, redflag) {
         var divrad = ((360/group.div)-group.divwidth)*(Math.PI/180);//number and width of dividers remains the same for inners.
         var point = [];
         var prog = [];//should be independent to each function, ideally.
+        var ir = [];
+        var or = [];
+        gr.append("path")
+          .attr("d", function (d, i){
+            barc = d3.svg.arc()
+              .startAngle(0)
+              .endAngle(function (d, i){return (progress[i] <= 0) ? 0 : Math.PI*2;})
+              .innerRadius(function (d, i){
+                if(!i){ir[i] = size-thickness;} else {
+                  ir[i] = ir[i-1] - (gap+thickness);
+                }//start with the initial size, decrease by gap and thickness each time
+                if(i && Math.floor(group.progress[i-1]/100)){ir[i] -= thickness;}//and this if there's a secondary bar.
+                return ir[i];})
+              .outerRadius(function (d, i){
+                if(!i){or[i] = size;} else {
+                  or[i] = or[i-1] - (gap+thickness);
+                }
+                if(i && Math.floor(group.progress[i-1]/100)){or[i] -= thickness;}
+                return or[i];});
+            return barc(d, i);              
+          })
+          .attr("fill", function (d, i){return backcolor(i);})
+          .attr("fill-opacity", group.backopacity);
         gr.append("path")
           .attr("d", function (d, i){
             curarc = d3.svg.arc()//just use this to set the desired points
               .startAngle(function (d, i){point[i] = rot + group.divwidth*(Math.PI/360); return point[i];})
               .endAngle(function (d, i){return point[i] + divrad;})
-              .innerRadius(function (d, i){return (size-thickness)-(gap+thickness)*i;})//use this specific gap and thickness.
-              .outerRadius(function (d, i){return size-(gap+thickness)*i;});//size can also vary for the second loop.
+              .innerRadius(function (d, i){return ir[i];})
+              .outerRadius(function (d, i){return or[i];});
             return curarc(d, i);
           })
           .attr("fill", function (d, i){return color(i);})
@@ -253,8 +260,8 @@ window.exports.viewer = (function () {
                 curarc = d3.svg.arc()
                   .startAngle(function (d){return point[i];})
                   .endAngle(function (d){return point[i] + divrad;})
-                  .innerRadius(function (d){return (size-thickness)-(gap+thickness)*i;})
-                  .outerRadius(function (d){return size-(gap+thickness)*i;});
+                  .innerRadius(function (d){return ir[i];})
+                  .outerRadius(function (d){return or[i];});//size can also vary for the second loop.
                 return curarc(d, ind);
               })
               .attr("fill", function (d){return color(i);})
@@ -281,19 +288,42 @@ window.exports.viewer = (function () {
             progtest = true;
           }
         }
-        if(progtest){//figure out how to delay until when it actually hits 100.
-          raddiv(size-thickness, np, thickness, gap, rot, delay+group.transition*800);
+        if(progtest && !redflag){//figure out how to delay until when it actually hits 100.
+          raddiv(size-thickness, np, gap, thickness, rot, delay+group.transition*800, true);
         }
       };
-      function raddi (size, progress, gap, thickness, rot, delay){
+      function raddi (size, progress, gap, thickness, rot, delay, redflag){
         var arcs = [];
+        var ir = [];
+        var or = [];
+        gr.append("path")
+          .attr("d", function (d, i){
+            barc = d3.svg.arc()
+              .startAngle(0)
+              .endAngle(function (d, i){return (progress[i] <= 0) ? 0 : Math.PI*2;})
+              .innerRadius(function (d, i){
+                if(!i){ir[i] = size-thickness;} else {
+                  ir[i] = ir[i-1] - (gap+thickness);
+                }//start with the initial size, decrease by gap and thickness each time
+                if(i && Math.floor(group.progress[i-1]/100)){ir[i] -= thickness;}//and this if there's a secondary bar.
+                return ir[i];})
+              .outerRadius(function (d, i){
+                if(!i){or[i] = size;} else {
+                  or[i] = or[i-1] - (gap+thickness);
+                }
+                if(i && Math.floor(group.progress[i-1]/100)){or[i] -= thickness;}
+                return or[i];});
+            return barc(d, i);              
+          })
+          .attr("fill", function (d, i){return backcolor(i);})
+          .attr("fill-opacity", group.backopacity);
         gr.append("path")
           .attr("d", function (d, i){
             arcs[i] = d3.svg.arc()
               .startAngle(rot)
               .endAngle(rot)
-              .innerRadius(function (d, i){return (size-thickness)-(gap+thickness)*i;})
-              .outerRadius(function (d, i){return size-(gap+thickness)*i;});
+              .innerRadius(function (d, i){return ir[i];})
+              .outerRadius(function (d, i){return or[i];});
             return arcs[i](d, i);
           })
           .attr("fill", function (d, i){return color(i);})
@@ -317,14 +347,14 @@ window.exports.viewer = (function () {
             progtest = true;
           }
         }
-        if(progtest){//figure out how to delay until when it actually hits 100.
-          raddi(size-thickness, np, thickness, gap, rot, delay+group.transition*800);
+        if(progtest && !redflag){//figure out how to delay until when it actually hits 100.
+          raddi(size-thickness, np, gap, thickness, rot, delay+group.transition*800, true);
         }
       };
       if(group.div){//nonzero divider set
-        raddiv(group.graphsize, group.progress, group.gap, group.thickness, rot, 0);
+        raddiv(group.graphsize, group.progress, group.gap, group.thickness, rot, 0, redfl);
       } else {
-        raddi(group.graphsize, group.progress, group.gap, group.thickness, rot, 0);
+        raddi(group.graphsize, group.progress, group.gap, group.thickness, rot, 0, redfl);
       }
       svgd
         .attr("height", group.graphsize*2 + "px")
