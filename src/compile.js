@@ -393,6 +393,29 @@ let translate = (function() {
       resume([].concat(err), (Math.round(val*100) / 100));
    });
   };
+  function get(node, options, resume) {
+  	visit(node.elts[0], options, function (err, val) {
+  		if(typeof val === 'string'){
+  			https.get(val, function(res) {
+  				var obj = '';
+
+  				res.on('data', function(d) {
+  					obj += d;
+  				});
+
+  				res.on('end', function() {
+  					resume([].concat(err), obj);
+  				})
+  			}).on('error', function(e) {
+  				err = err.concat(error("Attempt to get data returned " + e, node.elts[0]));
+  				resume([].concat(err), val);
+  			})
+  		} else {
+  			err = err.concat(error("Argument is not a valid string.", node.elts[0]));
+  			resume([].concat(err), val);
+  		}
+  	});
+  };
   function data(node, options, resume) {//one value: an object or array thereof
     visit(node.elts[0], options, function (err, val) {
       var ret = {
@@ -415,10 +438,15 @@ let translate = (function() {
         texttype: 'percent',
         style: [{key: "font-weight", val: 600}],
         rounding: 0,
-        labels: 'off',
-        arcs: []
+        labels: 'off'
       };
-      if((!(val instanceof Array) && !(typeof val === 'string')) || !val.length ){
+      if(typeof val === "string"){
+      	val = JSON.parse(val);
+      	if(val.error && val.error.length > 0) {
+      		err = err.concat(error("Attempt to parse input returned " + val.error, node.elts[0]));
+      	}
+      }
+      if(!(val instanceof Array) || !val.length ){
         err = err.concat(error("Invalid parameters.", node.elts[0]));
       } else if(val instanceof Array && val.length) {//it's an array in any case.
         if(typeof val[0] === "object" && val[0].key && val[1].key){//one object (0 = goal, 1 = value)
@@ -447,9 +475,19 @@ let translate = (function() {
               err = err.concat(error("Object at index "+index+" improperly formatted.", node.elts[0]));
             }
           });
+        } else if(typeof val[0] === "object"){//parsed array.
+        	val.forEach(function (element, index, array) {
+        		if(element.goal && element.value){
+              var d = decprog(element.goal, element.value);
+              ret.goal = ret.goal.concat(+d.goal);
+              ret.current = ret.current.concat(+d.value);
+              ret.progress = ret.progress.concat(d.progress);
+              ret.dec = ret.dec.concat(d.dec);
+        		} else {
+        			err = err.concat(error("Object at index "+index+" missing parameters.", node.elts[0]));
+        		}
+        	});
         }
-      } else if(typeof val === 'string'){
-      	
       }
       resume([].concat(err), ret);
     });
@@ -491,7 +529,6 @@ let translate = (function() {
       } else {
         if(params.op && params.op === "default"){
           val[params.prop] = params.val;
-          resume([].concat(err), val);
         } else if(params.op && params.op === "positive"){
           visit(node.elts[1], options, function (err2, val2) {
             if(isNaN(val2) || val2 < 0){
@@ -500,7 +537,7 @@ let translate = (function() {
             if(typeof val === "object" && val){
               val[params.prop] = +val2;
             }
-            resume([].concat(err).concat(err2), val);
+            err = err.concat(err2);
           });
         } else if(params.op && params.op === "color"){
           visit(node.elts[1], params, function (err2, val2) {
@@ -514,7 +551,7 @@ let translate = (function() {
               });
             }
             val[params.prop+"color"] = val2;
-            resume([].concat(err).concat(err2), val);
+            err = err.concat(err2);
           });
         }
       }
@@ -945,6 +982,7 @@ let translate = (function() {
     "DIVWIDTH" : divwidth,
     "BREWER" : brewer,
     "GAP" : gap,
+    "GET" : get,
   }
   return translate;
 })();
