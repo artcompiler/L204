@@ -736,10 +736,11 @@ let translate = (function() {
       if(isNaN(val2)){
         err2 = err2.concat(error("Argument must be a number.", node.elts[1]));
       } else {
-        while(+val2 >= 360){
+      	val2 = +val2;
+        while(val2 >= 360){
           val2 -= 360;
         }//720 becomes 0, 390 becomes 30
-        while(+val2 < 0){
+        while(val2 < 0){
           val2 += 360;
         }//-90 becomes 270, -360 becomes 0
       }
@@ -915,25 +916,11 @@ let translate = (function() {
       resume([].concat(err), ret);
     });
   }
-  function list(node, options, resume) {
-    //pre processing here
-    exprs(node, options, function(err, val){
-      //post processing here
-      resume([].concat(err), val);
-    });
-  };
   function binding(node, options, resume) {
     visit(node.elts[0], options, function (err1, val1) {
       visit(node.elts[1], options, function (err2, val2) {
         resume([].concat(err1).concat(err2), {key: val1, val: val2});
       });
-    });
-  };
-  function record(node, options, resume) {
-    //pre processing here
-    exprs(node, options, function(err, val){
-      //post processing here
-      resume([].concat(err), val);
     });
   };
   function exprs(node, options, resume) {
@@ -962,8 +949,8 @@ let translate = (function() {
     "NUM": num,
     "IDENT": ident,
     "BOOL": bool,
-    "LIST" : list,
-    "RECORD" : record,
+    "LIST" : exprs,
+    "RECORD" : exprs,
     "BINDING" : binding,
     "ADD" : add,
     "STYLE" : style,
