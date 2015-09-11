@@ -188,8 +188,10 @@ window.exports.viewer = (function () {
       if(r<0){r=0;}
       var rot = group.rotation*(Math.PI/180);
       var redfl = group.secondary;
+      var radarc = group.arc*Math.PI/180;
+      //Replace all instances of 360 with group.arc and Math.PI*2 with group.arc*Math.PI/180
       function raddiv (size, progress, gap, thickness, rot, delay, redflag) {
-        var divrad = ((360/group.div)-group.divwidth)*(Math.PI/180);//number and width of dividers remains the same for inners.
+        var divrad = ((group.arc/group.div)-group.divwidth)*(Math.PI/180);//number and width of dividers remains the same for inners.
         var point = [];
         var prog = [];//should be independent to each function, ideally.
         var ir = [];
@@ -197,8 +199,8 @@ window.exports.viewer = (function () {
         gr.append("path")
           .attr("d", function (d, i){
             barc = d3.svg.arc()
-              .startAngle(0)
-              .endAngle(function (d, i){return (progress[i] <= 0) ? 0 : Math.PI*2;})
+              .startAngle(rot)
+              .endAngle(function (d, i){return (progress[i] <= 0) ? rot : rot+ radarc;})
               .innerRadius(function (d, i){
                 if(!i){ir[i] = size-thickness;} else {
                   ir[i] = ir[i-1] - (gap+thickness);
@@ -295,8 +297,8 @@ window.exports.viewer = (function () {
         gr.append("path")
           .attr("d", function (d, i){
             barc = d3.svg.arc()
-              .startAngle(0)
-              .endAngle(function (d, i){return (progress[i] <= 0) ? 0 : Math.PI*2;})
+              .startAngle(rot)
+              .endAngle(function (d, i){return (progress[i] <= 0) ? rot : rot+radarc;})
               .innerRadius(function (d, i){
                 if(!i){ir[i] = size-thickness;} else {
                   ir[i] = ir[i-1] - (gap+thickness);
@@ -328,7 +330,11 @@ window.exports.viewer = (function () {
           .delay(delay)
           .duration(group.transition*1000)
           .attrTween("d", function (d, i){
-            var itp = d3.interpolate(rot, rot + (Math.PI*2)*(progress[i]/100));
+            var ccc = progress[i]/100;
+            if (ccc > 1){
+              ccc = 1;
+            }
+            var itp = d3.interpolate(rot, rot + (radarc)*ccc);
 
             return function(t) {
               return arcs[i].endAngle(itp(t))(d, i);
