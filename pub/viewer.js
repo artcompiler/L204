@@ -50,17 +50,19 @@ window.exports.viewer = (function () {
         group.gap = 5;
       }
       fontsize = group.thickness+1;
-      var finaltext = '';
       var textwidth = 0;
       if(group.labels == 'off'){
         fontsize = 0;
       } else {
-        gr.append("text")
+        var text = gr.append("text")
           .attr("x", group.graphsize)
           .attr("y", function (d, i){return group.thickness + (group.thickness+group.gap)*i;})
-          .text(" ")
+          .text(function (d, i){return ((group.texttype=='percent') ? (group.progress[i]+'%') : (group.current[i]+'/'+group.goal[i]));})
           .style("font-size", fontsize+"px")
           .call(styles, group.style)
+          .each(function (d){
+            if(this.getBBox().width > textwidth){textwidth = this.getBBox().width;}
+          })
           .transition(function (d, i){return "bart"+i;})
           .duration(group.transition*1000)
           .tween("text", function (d, i, a){
@@ -77,12 +79,6 @@ window.exports.viewer = (function () {
               }
             }
           });
-        for(var v=0;v<group.goal.length;v++){
-          finaltext = ((group.texttype=='percent') ? (group.progress[v]+'%') : (group.current[v]+'/'+group.goal[v]));
-          if(finaltext.length > textwidth){
-            textwidth = finaltext.length;
-          }
-        }
       }
       gr.append("rect")//one back rectangle per datum
         .attr("x", 0)
@@ -110,7 +106,7 @@ window.exports.viewer = (function () {
           .duration(group.transition*1000)
           .attr("width", function (d, i) {return group.graphsize*clamp[i];});
       y = (group.thickness+group.gap)*group.goal.length - group.gap;
-      x = group.graphsize+(textwidth+1)*(fontsize/2);
+      x = group.graphsize+textwidth;
       var xt = 0;
       var yt = 0;
       var cos = Math.abs(Math.cos(group.rotation*(Math.PI/180)));
@@ -138,31 +134,26 @@ window.exports.viewer = (function () {
       gr
         .attr("transform", "translate(" + (group.graphsize) + "," + (group.graphsize) + ")");
       fontsize = (group.graphsize/(5));
-      var finaltext = '';
       var textwidth = 0;
       if(group.labels == 'off'){
         fontsize = 0;
       } else {
-        for(var v=0;v<group.goal.length;v++){
-          finaltext = ((group.texttype=='percent') ? (group.progress[v]+'%') : (group.current[v]+'/'+group.goal[v]));
-          if(finaltext.length > textwidth){
-            textwidth = finaltext.length;
-          }
-        }
         var tx = (group.labels.endsWith("left")) ? (-group.graphsize - (textwidth+1)*(fontsize/2)) : group.graphsize;
         var ty = (group.labels.startsWith("bottom")) ? group.graphsize : (-group.graphsize) + fontsize;
         if(group.labels == "center"){
           tx = 0;
           ty = fontsize*(2/3) - (fontsize-1)*group.goal.length/2;
-          textwidth = 0;
         }
         gr.append("text")
           .attr("x", tx)//shifts down by fontsize-1 for each so center shifts up by half
           .attr("y", function (d, i){return (group.labels.startsWith("bottom")) ? ty - (fontsize-1)*i : ty + (fontsize-1)*i;})
-          .text(" ")
+          .text(function (d, i){return ((group.texttype=='percent') ? (group.progress[i]+'%') : (group.current[i]+'/'+group.goal[i]));})
           .attr("text-anchor", (group.labels == 'center') ? "middle" : "left")
           .style("font-size", fontsize+"px")
           .call(styles, group.style)
+          .each(function (d){
+            if(this.getBBox().width > textwidth && group.labels != "center"){textwidth = this.getBBox().width;}
+          })
           .transition(function (d, i){return "radt"+i;})
           .duration(group.transition*1000)
           .tween("text", function (d, i, a){
@@ -368,7 +359,7 @@ window.exports.viewer = (function () {
       }
       svgd
         .attr("height", group.graphsize*2 + "px")
-        .attr("width", (group.graphsize*2 + (textwidth+1)*(fontsize/2)) + "px");
+        .attr("width", (group.graphsize*2 + textwidth) + "px");
     }
   }
   function capture(el) {
