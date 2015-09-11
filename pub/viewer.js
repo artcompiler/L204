@@ -138,7 +138,7 @@ window.exports.viewer = (function () {
       if(group.labels == 'off'){
         fontsize = 0;
       } else {
-        var tx = (group.labels.endsWith("left")) ? (-group.graphsize - (textwidth+1)*(fontsize/2)) : group.graphsize;
+        var tx = (group.labels.endsWith("left")) ? (-group.graphsize) : group.graphsize;
         var ty = (group.labels.startsWith("bottom")) ? group.graphsize : (-group.graphsize) + fontsize;
         if(group.labels == "center"){
           tx = 0;
@@ -148,7 +148,7 @@ window.exports.viewer = (function () {
           .attr("x", tx)//shifts down by fontsize-1 for each so center shifts up by half
           .attr("y", function (d, i){return (group.labels.startsWith("bottom")) ? ty - (fontsize-1)*i : ty + (fontsize-1)*i;})
           .text(function (d, i){return ((group.texttype=='percent') ? (group.progress[i]+'%') : (group.current[i]+'/'+group.goal[i]));})
-          .attr("text-anchor", (group.labels == 'center') ? "middle" : "left")
+          .attr("text-anchor", (group.labels == 'center') ? "middle" : (group.labels.endsWith('left')) ? "end" : "start")
           .style("font-size", fontsize+"px")
           .call(styles, group.style)
           .each(function (d){
@@ -172,7 +172,7 @@ window.exports.viewer = (function () {
           });
         if(group.labels.endsWith("left")){
           gr
-            .attr("transform", "translate(" + (group.graphsize + (textwidth+1)*(fontsize/2)) + "," + (group.graphsize) + ")");
+            .attr("transform", "translate(" + (group.graphsize + textwidth) + "," + (group.graphsize) + ")");
         }
       }
       if(!group.thickness){//do some magic here to make thickness based on innerradius.
