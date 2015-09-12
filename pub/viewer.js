@@ -128,53 +128,9 @@ window.exports.viewer = (function () {
       gr
         .attr("transform", "translate("+xt+","+yt+") rotate("+group.rotation+")");
       svgd
-        .attr("height", (cos*y + sin*x) + "px")
-        .attr("width", (cos*x + sin*y) + "px");
+        .attr("height", svgd.node().getBBox().height + "px")
+        .attr("width", svgd.node().getBBox().width + "px");
     } else if(group.graphtype == 'rad'){
-      gr
-        .attr("transform", "translate(" + (group.graphsize) + "," + (group.graphsize) + ")");
-      fontsize = (group.graphsize/(5));
-      var textwidth = 0;
-      if(group.labels == 'off'){
-        fontsize = 0;
-      } else {
-        var tx = (group.labels.endsWith("left")) ? (-group.graphsize) : group.graphsize;
-        var ty = (group.labels.startsWith("bottom")) ? group.graphsize : (-group.graphsize) + fontsize;
-        if(group.labels == "center"){
-          tx = 0;
-          ty = fontsize*(2/3) - (fontsize-1)*group.goal.length/2;
-        }
-        gr.append("text")
-          .attr("x", tx)//shifts down by fontsize-1 for each so center shifts up by half
-          .attr("y", function (d, i){return (group.labels.startsWith("bottom")) ? ty - (fontsize-1)*i : ty + (fontsize-1)*i;})
-          .text(function (d, i){return ((group.texttype=='percent') ? (group.progress[i]+'%') : (group.current[i]+'/'+group.goal[i]));})
-          .attr("text-anchor", (group.labels == 'center') ? "middle" : (group.labels.endsWith('left')) ? "end" : "start")
-          .style("font-size", fontsize+"px")
-          .call(styles, group.style)
-          .each(function (d){
-            if(this.getBBox().width > textwidth && group.labels != "center"){textwidth = this.getBBox().width;}
-          })
-          .transition(function (d, i){return "radt"+i;})
-          .duration(group.transition*1000)
-          .tween("text", function (d, i, a){
-            if(group.texttype == 'percent'){
-              var it = d3.interpolate(0, group.progress[i]);
-              return function (t){
-                this.textContent = (+(it(t).toFixed(group.dec[i]))) + "%";
-              }
-            } else {
-              var i0 = d3.interpolate(0, group.current[i]);
-              var i1 = d3.interpolate(0, group.goal[i]);
-              return function (t){
-                this.textContent = (+(i0(t).toFixed(group.dec[i]))) + "/" + (+(i1(t).toFixed(group.dec[i])));
-              }
-            }
-          });
-        if(group.labels.endsWith("left")){
-          gr
-            .attr("transform", "translate(" + (group.graphsize + textwidth) + "," + (group.graphsize) + ")");
-        }
-      }
       if(!group.thickness){//do some magic here to make thickness based on innerradius.
         group.thickness = (group.graphsize - group.innerradius)/((group.goal.length-1)*2);
         if(group.thickness < 0){
@@ -189,6 +145,7 @@ window.exports.viewer = (function () {
       var rot = group.rotation*(Math.PI/180);
       var redfl = group.secondary;
       var radarc = group.arc*Math.PI/180;
+      var box = 0;
       //Replace all instances of 360 with group.arc and Math.PI*2 with group.arc*Math.PI/180
       function raddiv (size, progress, gap, thickness, rot, delay, redflag) {
         var divrad = ((group.arc/group.div)-group.divwidth)*(Math.PI/180);//number and width of dividers remains the same for inners.
@@ -196,7 +153,7 @@ window.exports.viewer = (function () {
         var prog = [];//should be independent to each function, ideally.
         var ir = [];
         var or = [];
-        gr.append("path")
+        var back = gr.append("path")
           .attr("d", function (d, i){
             barc = d3.svg.arc()
               .startAngle(rot)
@@ -217,6 +174,7 @@ window.exports.viewer = (function () {
           })
           .attr("fill", function (d, i){return backcolor(i);})
           .attr("fill-opacity", group.backopacity);
+        if(!box){box = back.node().getBBox();}
         gr.append("path")
           .attr("d", function (d, i){
             curarc = d3.svg.arc()//just use this to set the desired points
@@ -294,7 +252,7 @@ window.exports.viewer = (function () {
         var arcs = [];
         var ir = [];
         var or = [];
-        gr.append("path")
+        back = gr.append("path")
           .attr("d", function (d, i){
             barc = d3.svg.arc()
               .startAngle(rot)
@@ -311,10 +269,11 @@ window.exports.viewer = (function () {
                 }
                 if(i && Math.floor(group.progress[i-1]/100) && group.secondary){or[i] -= thickness;}
                 return or[i];});
-            return barc(d, i);              
+            return barc(d, i);
           })
           .attr("fill", function (d, i){return backcolor(i);})
           .attr("fill-opacity", group.backopacity);
+        if(!box){box = back.node().getBBox();}
         gr.append("path")
           .attr("d", function (d, i){
             arcs[i] = d3.svg.arc()
@@ -363,9 +322,80 @@ window.exports.viewer = (function () {
       } else {
         raddi(group.graphsize, group.progress, group.gap, group.thickness, rot, 0, redfl);
       }
+        gr
+          .attr("transform", "translate(" + (-box.x) + "," + (-box.y) + ")");
+      if(group.labels != 'off'){
+        var textwidth = 0;
+        var textheight = 0;
+        fontsize = (group.graphsize/(5));
+//for left: box.x, middle: 0, right: box.x + box.width
+        var tx = 0;
+        var ty = 0;
+        switch(group.labels.split(" ")[0]){
+          case "bottom":
+            ty = box.y+box.height;
+            break;
+          case "middle":
+            ty = fontsize*(2/3) - (fontsize-1)*group.goal.length/2;
+            break;
+          case "top":
+            ty = box.y+fontsize;
+            break;
+        }
+        switch(group.labels.split(" ")[1]){
+          case "right":
+            tx = box.x+box.width;
+            break;
+          case "middle":
+            tx = 0;
+            break;
+          case "left":
+            tx = box.x;
+            break;
+        }
+        var text = gr.append("text")
+          .attr("x", tx)//shifts down by fontsize-1 for each so center shifts up by half
+          .attr("y", function (d, i){return (group.labels.startsWith("bottom")) ? ty - (fontsize-1)*i : ty + (fontsize-1)*i;})
+          .text(function (d, i){return ((group.texttype=='percent') ? (group.progress[i]+'%') : (group.current[i]+'/'+group.goal[i]));})
+          .attr("text-anchor", (!tx) ? "middle" : (group.labels.endsWith('left')) ? "end" : "start")
+          .style("font-size", fontsize+"px")
+          .call(styles, group.style)
+          .each(function (d){
+            if(this.getBBox().width > textwidth && tx!=0){textwidth = this.getBBox().width;}
+          })
+          .transition(function (d, i){return "radt"+i;})
+          .duration(group.transition*1000)
+          .tween("text", function (d, i, a){
+            if(group.texttype == 'percent'){
+              var it = d3.interpolate(0, group.progress[i]);
+              return function (t){
+                this.textContent = (+(it(t).toFixed(group.dec[i]))) + "%";
+              }
+            } else {
+              var i0 = d3.interpolate(0, group.current[i]);
+              var i1 = d3.interpolate(0, group.goal[i]);
+              return function (t){
+                this.textContent = (+(i0(t).toFixed(group.dec[i]))) + "/" + (+(i1(t).toFixed(group.dec[i])));
+              }
+            }
+          });
+        if(group.labels.endsWith("left")){
+          gr
+            .attr("transform", "translate(" + (textwidth-box.x) + "," + (-box.y) + ")");
+        } else if (group.labels.split(" ")[1] == "middle"){
+          textheight = text.node().getBBox().height*(group.goal.length);
+          if(group.labels.startsWith("top")){
+            gr.selectAll("path")
+              .attr("transform", "translate(" + 0 + "," + (textheight) + ")");
+          } else if(group.labels.startsWith("bottom")){
+            gr.selectAll("text")
+              .attr("transform", "translate(" + 0 + "," + (textheight) + ")");
+          }
+        }
+      } else {textwidth=0;}
       svgd
-        .attr("height", group.graphsize*2 + "px")
-        .attr("width", (group.graphsize*2 + textwidth) + "px");
+        .attr("height", svgd.node().getBBox().height + "px")
+        .attr("width", svgd.node().getBBox().width + "px");
     }
   }
   function capture(el) {

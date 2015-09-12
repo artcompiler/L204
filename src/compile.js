@@ -435,6 +435,7 @@ let translate = (function() {
         divwidth: 2,
         gap: 'def',
         dec: [],
+        arc: 360,
         texttype: 'percent',
         style: [{key: "font-weight", val: 600}],
         rounding: 0,
@@ -682,17 +683,27 @@ let translate = (function() {
     });
   }
   
-  let labeloptions = {
+  let labeloptions = {//second word is x, first is y
     "on": "top right",
-    "left": "top left",
+    "left": "middle left",
     "top left": "top left",
-    "right": "top right",
+    "center left": "middle left",
+    "middle left": "middle left",
+    "top": "top middle",
+    "top middle": "top middle",
+    "top center": "top middle",
+    "right": "middle right",
+    "center right": "middle right",
+    "middle right": "middle right",
     "top right": "top right",
-    "bottom": "bottom right",
+    "bottom": "bottom middle",
+    "bottom middle": "bottom middle",
+    "bottom center": "bottom middle",
     "bottom right": "bottom right",
     "bottom left": "bottom left",
     "off": "off",
-    "center": "center",
+    "center": "middle",
+    "middle": "middle"
   };
   function labels(node, options, resume){//0 is object, 1 is parameter
     visit(node.elts[1], options, function (err2, val2) {
@@ -754,6 +765,26 @@ let translate = (function() {
       }, params)
     });
   }
+  function arc(node, options, resume){
+    visit(node.elts[1], options, function (err2, val2) {
+      if (isNaN(val2)) {
+        err2 = err2.concat(error("Argument must be a number.", node.elts[1]));
+      } else {
+        val2 = +val2;
+        if(val2 > 360 || val2 < 0){
+          err2 = err2.concat(error("Argument must be between 0 and 360.", node.elts[1]));
+        }
+      }
+      var params = {
+        op: "default",
+        prop: "arc",
+        val: val2
+      };
+      set(node, options, function (err1, val1) {
+        resume([].concat(err1).concat(err2), val1);
+      }, params);
+    });
+  };
   function rgb(node, options, resume){//takes in rgb outputs hex
     let ret = "";
     visit(node.elts[0], options, function (err1, val1) {//b
@@ -981,6 +1012,7 @@ let translate = (function() {
     "GAP" : gap,
     "GET" : get,
     "SECBAR" : secbar,
+    "ARC" : arc,
   }
   return translate;
 })();
