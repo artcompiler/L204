@@ -87,8 +87,12 @@ window.exports.viewer = (function () {
         .attr("ry", group.rounding)
         .attr("width", group.graphsize)
         .attr("height", group.thickness)
-        .attr("fill", function (d, i){return backcolor(i);})
-        .attr("fill-opacity", group.backopacity);
+        .attr("fill", function (d, i){
+          var tt = backcolor(i);
+          if(tt.a){d.bopa = tt.a;}
+          return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
+        })
+        .attr("fill-opacity", function (d){return d.bopa ? d.bopa : group.backopacity;});
       //no transition for the back ones.
       var clamp = [];
       gr.append("rect")//one per datum, again.
@@ -100,8 +104,12 @@ window.exports.viewer = (function () {
             clamp = clamp.concat((group.current[i]/group.goal[i] > 1) ? 1 : group.current[i]/group.goal[i]);
             return (group.rounding*2 < group.graphsize*clamp[i] ? group.rounding*2 : group.graphsize*clamp[i]);})
           .attr("height", group.thickness)
-          .attr("fill", function (d, i){return color(i);})
-          .attr("fill-opacity", group.graphopacity)
+          .attr("fill", function (d, i){
+            var tt = color(i);
+            if(tt.a){d.opa = tt.a;}
+            return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
+          })
+          .attr("fill-opacity", function (d){return d.opa ? d.opa : group.graphopacity;})
           .transition(function (d, i){return "bar"+i;})//if the function doesn't work figure out another naming convention
           .duration(group.transition*1000)
           .attr("width", function (d, i) {return group.graphsize*clamp[i];});
@@ -172,8 +180,12 @@ window.exports.viewer = (function () {
                 return or[i];});
             return barc(d, i);              
           })
-          .attr("fill", function (d, i){return backcolor(i);})
-          .attr("fill-opacity", group.backopacity);
+          .attr("fill", function (d, i){
+            var tt = backcolor(i);
+            if(tt.a){d.bopa = tt.a;}
+            return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
+          })
+          .attr("fill-opacity", function (d){return d.bopa ? d.bopa : group.backopacity;});
         if(!box){box = back.node().getBBox();}
         gr.append("path")
           .attr("d", function (d, i){
@@ -184,7 +196,11 @@ window.exports.viewer = (function () {
               .outerRadius(function (d, i){return or[i];});
             return curarc(d, i);
           })
-          .attr("fill", function (d, i){return color(i);})
+          .attr("fill", function (d, i){
+            var tt = color(i);
+            if(tt.a){d.opa = tt.a;}
+            return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
+          })
           .attr("fill-opacity", 0)
           .transition()
           .delay(delay)
@@ -199,7 +215,7 @@ window.exports.viewer = (function () {
               ch=1;
             }
             prog[i] -= (1/group.div);//decrease by divider fraction
-            return group.graphopacity*ch;
+            return d.opa? d.opa*ch : group.graphopacity*ch;
           })
           .each("end", function (e, i){return divi(e, i);});
         
@@ -215,7 +231,11 @@ window.exports.viewer = (function () {
                   .outerRadius(function (d){return or[i];});//size can also vary for the second loop.
                 return curarc(d, ind);
               })
-              .attr("fill", function (d){return color(i);})
+              .attr("fill", function (d){
+                var tt = color(i);
+                if(tt.a){d.opa = tt.a;}
+                return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
+              })
               .attr("fill-opacity", 0)
               .transition()
               .duration(function (d){return group.transition*1000/(group.div*progress[i]/100);})
@@ -225,7 +245,7 @@ window.exports.viewer = (function () {
                   ch=1;
                 }
                 prog[i] -= (1/group.div);//decrease by divider fraction
-                return group.graphopacity*ch;
+                return d.opa ? d.opa*ch : group.graphopacity*ch;
               })
               .each("end", function (e){return divi(e, i);});
           }
@@ -271,8 +291,12 @@ window.exports.viewer = (function () {
                 return or[i];});
             return barc(d, i);
           })
-          .attr("fill", function (d, i){return backcolor(i);})
-          .attr("fill-opacity", group.backopacity);
+          .attr("fill", function (d, i){
+            var tt = backcolor(i);
+            if(tt.a){d.bopa = tt.a;}
+            return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
+          })
+          .attr("fill-opacity", function (d){return d.bopa ? d.bopa : group.backopacity;});
         if(!box){box = back.node().getBBox();}
         gr.append("path")
           .attr("d", function (d, i){
@@ -283,8 +307,12 @@ window.exports.viewer = (function () {
               .outerRadius(function (d, i){return or[i];});
             return arcs[i](d, i);
           })
-          .attr("fill", function (d, i){return color(i);})
-          .attr("fill-opacity", group.graphopacity)
+          .attr("fill", function (d, i){
+            var tt = color(i);
+            if(tt.a){d.opa = tt.a;}
+            return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
+          })
+          .attr("fill-opacity", function (d){return d.opa ? d.opa : group.graphopacity;})
           .transition(function (d, i){return "rad"+i;})
           .delay(delay)
           .duration(group.transition*1000)

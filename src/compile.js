@@ -545,13 +545,24 @@ let translate = (function() {
             if(!(val2 instanceof Array)){
               err2 = err2.concat(error("Please provide an array or brewer color.", node.elts[1]));
             } else {
-              val2.forEach(function (element, index, array){//check that it's all hex values
-                if(typeof element !== "string" || !(/^#[0-9A-F]{6}$/i.test(element))){//not string or not hex
-                  err2 = err2.concat(error("Index " + index + " is not a valid hex string.", node.elts[1]));
+            	var ret = [];
+              val2.forEach(function (element, index, array){
+                if(typeof element === "string" && /^#[0-9A-F]{6}$/i.test(element)){//valid hex string.
+                	var temp = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(element);
+                	ret = ret.concat({
+                		r: parseInt(temp[1], 16),
+                		g: parseInt(temp[2], 16),
+                		b: parseInt(temp[3], 16),
+                		a: 1
+                	});
+                } else if(!isNaN(element.r) && !isNaN(element.g) && !isNaN(element.b) && !isNaN(element.a)){
+                	ret = ret.concat(element);
+                } else {
+                	err2 = err2.concat(error("Index " + index + " is not a valid hex string or rgb color.", node.elts[1]));
                 }
               });
             }
-            val[params.prop+"color"] = val2;
+            val[params.prop+"color"] = ret;
             err = err.concat(err2);
           });
         }
@@ -785,33 +796,53 @@ let translate = (function() {
       }, params);
     });
   };
-  function rgb(node, options, resume){//takes in rgb outputs hex
-    let ret = "";
+  function rgba(node, options, resume){
+  	visit(node.elts[0], options, function (err1, val1) {//a
+  		if(isNaN(val1) || val1 < 0){
+  			err1 = err1.concat(error("Alpha must be a positive number.", node.elts[0]));
+  		} else {
+        if(val1 > 1 && val1 < 100){
+          val1 = val1/100;
+        } else if (val1 > 100){
+          val1 = 1;
+        }
+  		}
+  		let test = node.elts.shift();
+  		rgb(node, options, function(err2, val2) {//run rgb, add alpha
+  			val2.a = val1
+  			node.elts.unshift(test);
+  			resume([].concat(err1).concat(err2), val2);
+  		});
+  	});
+  }
+  function rgb(node, options, resume){
+    let ret = {
+    	r: 0,
+    	g: 0,
+    	b: 0,
+    	a: 1
+    };
     visit(node.elts[0], options, function (err1, val1) {//b
       if(isNaN(val1) || val1 < 0 || +val1 > 255){
         err1 = err1.concat(error("Argument must be between 0 and 255.", node.elts[0]));
       }
-      val1 = (+val1).toString(16);
-      ret = (val1.length == 1 ? "0" + val1 : val1) + ret;
+      ret.b = +val1;
       visit(node.elts[1], options, function (err2, val2) {//g
         if(isNaN(val2) || val2 < 0 || +val2 > 255){
           err2 = err2.concat(error("Argument must be between 0 and 255.", node.elts[1]));
         }
-        val2 = (+val2).toString(16);
-        ret = (val2.length == 1 ? "0" + val2 : val2) + ret;
+        ret.g = +val2;
         visit(node.elts[2], options, function (err3, val3) {//r
           if(isNaN(val3) || val3 < 0 || +val3 > 255){
             err3 = err3.concat(error("Argument must be between 0 and 255.", node.elts[2]));
           }
-          val3 = (+val3).toString(16);
-          ret = "#" + (val3.length == 1 ? "0" + val3 : val3) + ret;
+          ret.r = +val3;
           resume([].concat(err1).concat(err2).concat(err3), ret);
         });
       });
     });
   }
-  //note to self: add new opacity commands
-  function opacity(node, options, resume) {//0=a, 1=b, 2=g, 3=r
+  function opacity(node, options, resume) {
     visit(node.elts[1], options, function (err2, val2) {
       if(isNaN(val2) || val2 < 0){
         err2 = err2.concat(error("Alpha must be a positive number.", node.elts[1]));
@@ -832,7 +863,7 @@ let translate = (function() {
       }, params)
     });
   }
-  function backopacity(node, options, resume) {//0=a, 1=b, 2=g, 3=r
+  function backopacity(node, options, resume) {
     visit(node.elts[1], options, function (err2, val2) {
       if(isNaN(val2) || val2 < 0){
         err2 = err2.concat(error("Alpha must be a positive number.", node.elts[1]));
@@ -880,6 +911,10 @@ let translate = (function() {
     "red grey" : 'RdGy',
     "red yellow blue" : 'RdYlBu',
     "red yellow green" : 'RdYlGn',
+    "spectral" : 'Spectral',
+    "dark" : 'Dark2',
+    "pastel" : 'Pastel1',
+    "accent" : 'Accent',
   }
   function brewer(node, options, resume) {//takes in color string and length, outputs array
     let ret = 0;
@@ -901,7 +936,6 @@ let translate = (function() {
       });
     });
   }
-  //both color functions take in an array. Just alter the color part of set.
   function fill(node, options, resume) {//first parameter is, of course, goal, second is color
     let params = {
       op: "color",
@@ -994,6 +1028,7 @@ let translate = (function() {
     "ANIMATE" : animate,
     "SIZE" : size,
     "RGB" : rgb,
+    "RGBA" : rgba,
     "THICK" : thick,
     "ROTATE" : rotate,
     "FRACTION" : fraction,
