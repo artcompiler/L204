@@ -423,7 +423,7 @@ let translate = (function() {
         current: [],
         progress: [],
         graphsize: 0,
-        graphcolor: colorbrewer['Pastel1'][9],
+        graphcolor: [{r: 0, g: 255, b: 0, a: 1}],
         graphopacity: 1,
         graphtype: 'bar',
         backcolor: ['#000000'],
@@ -674,6 +674,7 @@ let translate = (function() {
         if(val2 > val1.graphsize){
           err2 = err2.concat(error("Inner radius must be less than outer.", node.elts[1]));
         }
+        val1.thickness = 0;
         resume([].concat(err1).concat(err2), val1);
       }, params)
     });

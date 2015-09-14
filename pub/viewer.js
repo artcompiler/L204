@@ -95,24 +95,88 @@ window.exports.viewer = (function () {
         .attr("fill-opacity", function (d){return d.bopa ? d.bopa : group.backopacity;});
       //no transition for the back ones.
       var clamp = [];
-      gr.append("rect")//one per datum, again.
-          .attr("x", 0)
-          .attr("y", function (d, i){ return (group.thickness+group.gap)*i;})//this is much easier now that I know I can get the index
-          .attr("rx", group.rounding)
-          .attr("ry", group.rounding)
-          .attr("width", function (d, i){
-            clamp = clamp.concat((group.current[i]/group.goal[i] > 1) ? 1 : group.current[i]/group.goal[i]);
-            return (group.rounding*2 < group.graphsize*clamp[i] ? group.rounding*2 : group.graphsize*clamp[i]);})
-          .attr("height", group.thickness)
-          .attr("fill", function (d, i){
-            var tt = color(i);
-            if(tt.a){d.opa = tt.a;}
-            return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
-          })
-          .attr("fill-opacity", function (d){return d.opa ? d.opa : group.graphopacity;})
-          .transition(function (d, i){return "bar"+i;})//if the function doesn't work figure out another naming convention
-          .duration(group.transition*1000)
-          .attr("width", function (d, i) {return group.graphsize*clamp[i];});
+      if(group.div){
+        var progress = group.progress;
+        var prog = [];
+        var point = [];
+        divwidth = group.graphsize/group.div - group.divwidth;
+        gr.append("rect")
+            .attr("x", function (d, i){point[i] = 0; return point[i];})
+            .attr("y", function (d, i){ return (group.thickness+group.gap)*i;})//this is much easier now that I know I can get the index
+            .attr("rx", group.rounding)
+            .attr("ry", group.rounding)
+            .attr("width", divwidth)
+            .attr("height", group.thickness)
+            .attr("fill", function (d, i){
+              var tt = color(i);
+              if(tt.a){d.opa = tt.a;}
+              return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
+            })
+            .attr("fill-opacity", 0)
+            .transition(function (d, i){return "bar"+i;})
+            .duration(function (d, i){return group.transition*1000/(group.div*progress[i]/100);})
+            .attr("fill-opacity", function (d, i){
+              prog[i] = progress[i]/100;
+              if(prog[i]>1){
+                prog[i]=1;
+              }
+              var ch = (prog[i])*group.div;
+              if(ch>1){//if it doesn't fit in this divider
+                ch=1;
+              }
+              prog[i] -= (1/group.div);//decrease the running progress by the divider's size
+              return d.opa ? d.opa*ch : group.graphopacity*ch;
+            })
+            .each("end", function (e, i){return divr(e, i);});
+        function divr(e, i){
+          if(prog[i] > 0){
+            point[i] += divwidth + group.divwidth;
+            d3.select(gr[0][i]).append("rect")
+              .attr("x", function (d){return point[i];})//moved over
+              .attr("y", function (d){ return (group.thickness+group.gap)*i;})//exactly the same
+              .attr("rx", group.rounding)
+              .attr("ry", group.rounding)
+              .attr("width", divwidth)
+              .attr("height", group.thickness)
+              .attr("fill", function (d){
+                var tt = color(i);
+                if(tt.a){d.opa = tt.a;}
+                return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
+              })
+              .attr("fill-opacity", 0)
+              .transition()
+              .duration(function (d){return group.transition*1000/(group.div*progress[i]/100);})
+              .attr("fill-opacity", function (d){
+                var ch = (prog[i])*group.div;
+                if(ch>1){//if it doesn't fit in this divider
+                  ch=1;
+                }
+                prog[i] -= (1/group.div);//decrease the running progress by the divider's size
+                return d.opa ? d.opa*ch : group.graphopacity*ch;
+              })
+              .each("end", function (e){return divr(e, i);});
+          }
+        };
+      } else {
+        gr.append("rect")//one per datum, again.
+            .attr("x", 0)
+            .attr("y", function (d, i){ return (group.thickness+group.gap)*i;})//this is much easier now that I know I can get the index
+            .attr("rx", group.rounding)
+            .attr("ry", group.rounding)
+            .attr("width", function (d, i){
+              clamp = clamp.concat((group.current[i]/group.goal[i] > 1) ? 1 : group.current[i]/group.goal[i]);
+              return (group.rounding*2 < group.graphsize*clamp[i] ? group.rounding*2 : group.graphsize*clamp[i]);})
+            .attr("height", group.thickness)
+            .attr("fill", function (d, i){
+              var tt = color(i);
+              if(tt.a){d.opa = tt.a;}
+              return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
+            })
+            .attr("fill-opacity", function (d){return d.opa ? d.opa : group.graphopacity;})
+            .transition(function (d, i){return "bar"+i;})//if the function doesn't work figure out another naming convention
+            .duration(group.transition*1000)
+            .attr("width", function (d, i) {return group.graphsize*clamp[i];});
+      }
       y = (group.thickness+group.gap)*group.goal.length - group.gap;
       x = group.graphsize+textwidth;
       var xt = 0;
