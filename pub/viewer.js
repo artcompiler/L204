@@ -201,10 +201,21 @@ window.exports.viewer = (function () {
         .attr("height", svgd.node().getBBox().height + "px")
         .attr("width", svgd.node().getBBox().width + "px");
     } else if(group.graphtype == 'rad'){
-      if(!group.thickness){//do some MOAR magic here to make thickness based on innerradius.
-        group.thickness = (group.graphsize - group.innerradius)/((group.goal.length-1)*2);
-        if(group.thickness < 0){
-          group.thickness = 5;
+      if(group.innerradius){
+        var l = group.goal.length-1;
+        if(group.secondary){
+          for(var v = 0;v < group.goal.length;v++){
+            if(group.progress[v] > 100){
+              l++;//need more room for secondary bars.
+            }
+          }
+        }
+        group.thickness = (group.graphsize - group.innerradius)/((l));
+        if(group.gap == 'def'){
+          group.thickness = group.thickness/2;
+          group.gap = group.thickness;
+        } else {
+          group.thickness -= group.gap;
         }
       }
       if(group.gap == 'def' && !group.innerradius){
