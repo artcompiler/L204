@@ -89,10 +89,9 @@ window.exports.viewer = (function () {
         .attr("height", group.thickness)
         .attr("fill", function (d, i){
           var tt = backcolor(i);
-          if(tt.a){d.bopa = tt.a;}
+          if(isNaN(tt.a)){tt.a = group.backopacity;}
           return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
-        })
-        .attr("fill-opacity", function (d){return d.bopa ? d.bopa : group.backopacity;});
+        });
       //no transition for the back ones.
       var clamp = [];
       if(group.div){
@@ -101,7 +100,7 @@ window.exports.viewer = (function () {
         var point = [];
         divwidth = group.graphsize/group.div - group.divwidth;
         gr.append("rect")
-            .attr("x", function (d, i){point[i] = 0; return point[i];})
+            .attr("x", function (d, i){point[i] = group.divwidth/2; return point[i];})
             .attr("y", function (d, i){ return (group.thickness+group.gap)*i;})//this is much easier now that I know I can get the index
             .attr("rx", group.rounding)
             .attr("ry", group.rounding)
@@ -109,13 +108,11 @@ window.exports.viewer = (function () {
             .attr("height", group.thickness)
             .attr("fill", function (d, i){
               var tt = color(i);
-              if(tt.a){d.opa = tt.a;}
-              return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
+              return "rgba("+tt.r+","+tt.g+","+tt.b+","+0+")";
             })
-            .attr("fill-opacity", 0)
             .transition(function (d, i){return "bar"+i;})
             .duration(function (d, i){return group.transition*1000/(group.div*progress[i]/100);})
-            .attr("fill-opacity", function (d, i){
+            .attr("fill", function (d, i){
               prog[i] = progress[i]/100;
               if(prog[i]>1){
                 prog[i]=1;
@@ -125,7 +122,9 @@ window.exports.viewer = (function () {
                 ch=1;
               }
               prog[i] -= (1/group.div);//decrease the running progress by the divider's size
-              return d.opa ? d.opa*ch : group.graphopacity*ch;
+              var tt = color(i);
+              if(isNaN(tt.a)){tt.a = group.graphopacity;}
+              return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a*ch+")";
             })
             .each("end", function (e, i){return divr(e, i);});
         function divr(e, i){
@@ -140,19 +139,19 @@ window.exports.viewer = (function () {
               .attr("height", group.thickness)
               .attr("fill", function (d){
                 var tt = color(i);
-                if(tt.a){d.opa = tt.a;}
-                return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
+                return "rgba("+tt.r+","+tt.g+","+tt.b+","+0+")";
               })
-              .attr("fill-opacity", 0)
               .transition()
               .duration(function (d){return group.transition*1000/(group.div*progress[i]/100);})
-              .attr("fill-opacity", function (d){
+              .attr("fill", function (d){
                 var ch = (prog[i])*group.div;
                 if(ch>1){//if it doesn't fit in this divider
                   ch=1;
                 }
                 prog[i] -= (1/group.div);//decrease the running progress by the divider's size
-                return d.opa ? d.opa*ch : group.graphopacity*ch;
+                var tt = color(i);
+                if(isNaN(tt.a)){tt.a = group.graphopacity;}
+                return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a*ch+")";
               })
               .each("end", function (e){return divr(e, i);});
           }
@@ -169,10 +168,9 @@ window.exports.viewer = (function () {
             .attr("height", group.thickness)
             .attr("fill", function (d, i){
               var tt = color(i);
-              if(tt.a){d.opa = tt.a;}
+              if(isNaN(tt.a)){tt.a = group.graphopacity;}
               return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
             })
-            .attr("fill-opacity", function (d){return d.opa ? d.opa : group.graphopacity;})
             .transition(function (d, i){return "bar"+i;})//if the function doesn't work figure out another naming convention
             .duration(group.transition*1000)
             .attr("width", function (d, i) {return group.graphsize*clamp[i];});
@@ -203,7 +201,7 @@ window.exports.viewer = (function () {
         .attr("height", svgd.node().getBBox().height + "px")
         .attr("width", svgd.node().getBBox().width + "px");
     } else if(group.graphtype == 'rad'){
-      if(!group.thickness){//do some magic here to make thickness based on innerradius.
+      if(!group.thickness){//do some MOAR magic here to make thickness based on innerradius.
         group.thickness = (group.graphsize - group.innerradius)/((group.goal.length-1)*2);
         if(group.thickness < 0){
           group.thickness = 5;
@@ -246,10 +244,9 @@ window.exports.viewer = (function () {
           })
           .attr("fill", function (d, i){
             var tt = backcolor(i);
-            if(tt.a){d.bopa = tt.a;}
+            if(isNaN(tt.a) || !redflag){tt.a = group.backopacity;}
             return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
-          })
-          .attr("fill-opacity", function (d){return d.bopa ? d.bopa : group.backopacity;});
+          });
         if(!box){box = back.node().getBBox();}
         gr.append("path")
           .attr("d", function (d, i){
@@ -262,14 +259,12 @@ window.exports.viewer = (function () {
           })
           .attr("fill", function (d, i){
             var tt = color(i);
-            if(tt.a){d.opa = tt.a;}
-            return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
+            return "rgba("+tt.r+","+tt.g+","+tt.b+","+0+")";
           })
-          .attr("fill-opacity", 0)
           .transition()
           .delay(delay)
           .duration(function (d, i){return group.transition*1000/(group.div*progress[i]/100);})
-          .attr("fill-opacity", function (d, i){
+          .attr("fill", function (d, i){
             prog[i] = progress[i]/100;
             if(prog[i]>1){
               prog[i]=1;
@@ -279,7 +274,9 @@ window.exports.viewer = (function () {
               ch=1;
             }
             prog[i] -= (1/group.div);//decrease by divider fraction
-            return d.opa? d.opa*ch : group.graphopacity*ch;
+            var tt = color(i);
+            if(isNaN(tt.a)){tt.a = group.graphopacity;}
+            return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a*ch+")";
           })
           .each("end", function (e, i){return divi(e, i);});
         
@@ -297,19 +294,19 @@ window.exports.viewer = (function () {
               })
               .attr("fill", function (d){
                 var tt = color(i);
-                if(tt.a){d.opa = tt.a;}
-                return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
+                return "rgba("+tt.r+","+tt.g+","+tt.b+","+0+")";
               })
-              .attr("fill-opacity", 0)
               .transition()
               .duration(function (d){return group.transition*1000/(group.div*progress[i]/100);})
-              .attr("fill-opacity", function (d){
+              .attr("fill", function (d){
                 var ch = (prog[i])*group.div;
                 if(ch>1){//larger than the divider
                   ch=1;
                 }
                 prog[i] -= (1/group.div);//decrease by divider fraction
-                return d.opa ? d.opa*ch : group.graphopacity*ch;
+                var tt = color(i);
+                if(isNaN(tt.a)){tt.a = group.graphopacity;}
+                return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a*ch+")";
               })
               .each("end", function (e){return divi(e, i);});
           }
@@ -357,10 +354,9 @@ window.exports.viewer = (function () {
           })
           .attr("fill", function (d, i){
             var tt = backcolor(i);
-            if(tt.a){d.bopa = tt.a;}
+            if(isNaN(tt.a) || !redflag){tt.a = group.backopacity;}
             return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
-          })
-          .attr("fill-opacity", function (d){return d.bopa ? d.bopa : group.backopacity;});
+          });
         if(!box){box = back.node().getBBox();}
         gr.append("path")
           .attr("d", function (d, i){
@@ -373,10 +369,9 @@ window.exports.viewer = (function () {
           })
           .attr("fill", function (d, i){
             var tt = color(i);
-            if(tt.a){d.opa = tt.a;}
+            if(isNaN(tt.a)){tt.a = group.graphopacity;}
             return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
           })
-          .attr("fill-opacity", function (d){return d.opa ? d.opa : group.graphopacity;})
           .transition(function (d, i){return "rad"+i;})
           .delay(delay)
           .duration(group.transition*1000)

@@ -553,9 +553,9 @@ let translate = (function() {
                 		r: parseInt(temp[1], 16),
                 		g: parseInt(temp[2], 16),
                 		b: parseInt(temp[3], 16),
-                		a: 1
+                		a: 'ast'
                 	});
-                } else if(!isNaN(element.r) && !isNaN(element.g) && !isNaN(element.b) && !isNaN(element.a)){
+                } else if(!isNaN(element.r) && !isNaN(element.g) && !isNaN(element.b)){
                 	ret = ret.concat(element);
                 } else {
                 	err2 = err2.concat(error("Index " + index + " is not a valid hex string or rgb color.", node.elts[1]));
@@ -804,13 +804,13 @@ let translate = (function() {
   		} else {
         if(val1 > 1 && val1 < 100){
           val1 = val1/100;
-        } else if (val1 > 100){
+        } else if (val1 >= 100){
           val1 = 1;
         }
   		}
   		let test = node.elts.shift();
   		rgb(node, options, function(err2, val2) {//run rgb, add alpha
-  			val2.a = val1
+  			val2.a = +val1;
   			node.elts.unshift(test);
   			resume([].concat(err1).concat(err2), val2);
   		});
@@ -821,7 +821,7 @@ let translate = (function() {
     	r: 0,
     	g: 0,
     	b: 0,
-    	a: 1
+    	a: 'ast'
     };
     visit(node.elts[0], options, function (err1, val1) {//b
       if(isNaN(val1) || val1 < 0 || +val1 > 255){
