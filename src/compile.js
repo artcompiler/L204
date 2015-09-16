@@ -407,7 +407,7 @@ let translate = (function() {
   					resume([].concat(err), obj);
   				})
   			}).on('error', function(e) {
-  				err = err.concat(error("Attempt to get data returned " + e, node.elts[0]));
+  				err = err.concat(error("Invalid URL.", node.elts[0]));
   				resume([].concat(err), val);
   			})
   		} else {
@@ -524,15 +524,15 @@ let translate = (function() {
   function set(node, options, resume, params){
     visit(node.elts[0], options, function (err, val) {
       if(typeof val !== "object" || !val){
-        err = err.concat(error("Argument Goal invalid.", node.elts[0]));
+        err = err.concat(error("Argument Data invalid.", node.elts[0]));
       } else if(!val.goal || !val.current || !val.goal.length || !val.current.length){
-        err = err.concat(error("Argument Goal missing parameters.", node.elts[0]));
+        err = err.concat(error("Argument Data invalid.", node.elts[0]));
       } else {
         if(params.op && params.op === "default"){
           val[params.prop] = params.val;
         } else if(params.op && params.op === "positive"){
           visit(node.elts[1], options, function (err2, val2) {
-            if(isNaN(val2) || val2 < 0){
+            if(isNaN(val2) || val2 <= 0){
               err2 = err2.concat(error("Argument must be a positive number.", node.elts[1]));
             }
             if(typeof val === "object" && val){
@@ -736,15 +736,6 @@ let translate = (function() {
       }, params)
     });
   }
-  function outer(node, options, resume){
-    let params = {
-      op: "positive",
-      prop: "graphsize"//yeah no outerradius and size are the same thing on radial.
-    };
-    set(node, options, function (err, val) {
-      resume([].concat(err), val);
-    }, params);    
-  }
   function rounding(node, options, resume) {
     let params = {
       op: "positive",
@@ -780,7 +771,7 @@ let translate = (function() {
   function arc(node, options, resume){
     visit(node.elts[1], options, function (err2, val2) {
       if (isNaN(val2)) {
-        err2 = err2.concat(error("Argument must be a number.", node.elts[1]));
+        err2 = err2.concat(error("Argument must be a positive number.", node.elts[1]));
       } else {
         val2 = +val2;
         if(val2 > 360 || val2 < 0){
@@ -974,7 +965,7 @@ let translate = (function() {
       };
       if(typeof val === "string" && (/^#[0-9A-F]{6}$/i.test(val))){
         ret.bg = val;//hex version
-      } else if(typeof val === "object" && val && val.r){
+      } else if(typeof val === "object" && val && !isNaN(val.r)){
         ret.bg = val;
       } else {
         err = err.concat(error("Argument is not a valid color.", node.elts[0]));
@@ -1040,7 +1031,7 @@ let translate = (function() {
     "BGD" : background,
     "ROUNDING" : rounding,
     "INNER" : inner,
-    "OUTER" : outer,
+    "OUTER" : size,
     "LABELS" : labels,
     "DIVIDERS": dividers,
     "DIVWIDTH" : divwidth,
