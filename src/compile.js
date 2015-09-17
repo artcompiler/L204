@@ -439,7 +439,8 @@ let translate = (function() {
         texttype: 'percent',
         style: [{key: "font-weight", val: 600}],
         rounding: 0,
-        labels: 'off'
+        labels: 'off',
+        text: null,
       };
       if(typeof val === "string"){
       	val = JSON.parse(val);
@@ -569,6 +570,24 @@ let translate = (function() {
       }
       resume([].concat(err), val);
     });
+  }
+  function text(node, options, resume){//0 = graph, 1 = string
+  	visit(node.elts[1], options, function (err1, val1) {//string
+			if(typeof val1 === "string"){//no point in an array given what we're actually doing with it.
+				let params = {
+					op: "default",
+					prop: "text",
+					val: val1
+				};
+				set(node, options, function (err, val) {
+					val.texttype = 'custom';
+					resume([].concat(err).concat(err1), val);
+				}, params);
+			} else {
+				err1 = err1.concat(error("Argument is not a string.", node.elts[1]));
+				resume([].concat(err1), val1);
+			}
+  	});
   }
   function bar(node, options, resume){
     let params = {
@@ -1040,6 +1059,7 @@ let translate = (function() {
     "GET" : get,
     "SECBAR" : secbar,
     "ARC" : arc,
+    "TEXT" : text,
   }
   return translate;
 })();
