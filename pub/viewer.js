@@ -491,7 +491,7 @@ window.exports.viewer = (function () {
           .style("font-size", fontsize+"px")
           .call(styles, group.style)
           .each(function (d){
-            if(this.getBBox().width > textwidth && tx!=0){textwidth = this.getBBox().width;}
+            if(this.getBBox().width > textwidth){textwidth = this.getBBox().width;}
           })
           .transition(function (d, i){return "radt"+i;})
           .duration(group.transition*1000)
@@ -528,6 +528,11 @@ window.exports.viewer = (function () {
           } else if(group.labels.startsWith("bottom")){
             gr.selectAll("text")
               .attr("transform", "translate(" + 0 + "," + (textheight) + ")");
+          }
+          if(box.width < textwidth){//center it.
+            console.log("Well that happened.");
+            gr
+              .attr("transform", "translate(" + (((textwidth-box.width)/2)-box.x) + "," + (-box.y) + ")");
           }
         }
       } else {textwidth=0;}
