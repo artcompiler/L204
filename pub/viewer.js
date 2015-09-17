@@ -530,9 +530,8 @@ window.exports.viewer = (function () {
               .attr("transform", "translate(" + 0 + "," + (textheight) + ")");
           }
           if(box.width < textwidth){//center it.
-            console.log("Well that happened.");
             gr
-              .attr("transform", "translate(" + (((textwidth-box.width)/2)-box.x) + "," + (-box.y) + ")");
+              .attr("transform", "translate(" + (textwidth/2) + "," + (-box.y) + ")");
           }
         }
       } else {textwidth=0;}
