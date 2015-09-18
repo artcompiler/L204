@@ -571,6 +571,12 @@ window.exports.viewer = (function () {
               if(isNaN(tt.a)){tt.a = group.graphopacity;}
               return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
             });
+          if(group.labels.endsWith("right")){
+            gr.selectAll("text")
+              .attr("transform", "translate(" + (fontsize*2/3) + "," + 0 + ")");
+            gr.selectAll("circle")
+              .attr("transform", "translate(" + (fontsize*2/3) + "," + 0 + ")");
+          }
         }
       }
       gr
