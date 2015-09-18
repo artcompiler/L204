@@ -479,6 +479,7 @@ window.exports.viewer = (function () {
           });
       }
       if(group.labels != 'off'){
+        var textwidth = 0;
         fontsize = (group.graphsize/(5));
         var tx = 0;
         var ty = 0;
@@ -490,7 +491,7 @@ window.exports.viewer = (function () {
             ty = fontsize*(2/3) - (fontsize-1)*group.goal.length/2;
             break;
           case "top":
-            ty = box.y - (fontsize-1)*group.goal.length/2;
+            ty = box.y - (fontsize-1)*group.goal.length;
             break;
         }
         switch(group.labels.split(" ")[1]){
@@ -505,7 +506,7 @@ window.exports.viewer = (function () {
             break;
         }
         var text = gr.append("text")
-          .attr("x", tx)//shifts down by fontsize-1 for each so center shifts up by half
+          .attr("x", tx)
           .attr("y", function (d, i){return (group.labels.startsWith("bottom")) ? ty - (fontsize-1)*i : ty + (fontsize-1)*i;})
           .text(function (d, i){
             if(group.texttype=='percent'){
@@ -523,6 +524,9 @@ window.exports.viewer = (function () {
           .attr("text-anchor", (!tx) ? "middle" : (group.labels.endsWith('left')) ? "end" : "start")
           .style("font-size", fontsize+"px")
           .call(styles, group.style)
+          .each(function (d){
+            if(this.getBBox().width > textwidth){textwidth = this.getBBox().width;}
+          })//need this to put the key in the right place.
           .transition(function (d, i){return "radt"+i;})
           .duration(group.transition*1000)
           .tween("text", function (d, i, a){
@@ -546,7 +550,28 @@ window.exports.viewer = (function () {
                   .replace(/%value/g, +(ival(t).toFixed(group.dec[i])));
               }
             }
-          });
+          });//radius is fontsize/2
+        if(group.key){
+          gr.append("circle")
+            .attr('r', (fontsize)/3)
+            .attr('cx', function (d, i){
+              if (group.labels.endsWith("left")){//anchored left
+                return tx - textwidth - fontsize/3;
+              } else if (group.labels.endsWith("right")){//anchored right
+                return tx - fontsize/3;
+              } else {//anchored center
+                return tx - textwidth/2 - fontsize/3;
+              }
+            })
+            .attr('cy', function (d, i){
+              return (group.labels.startsWith("bottom")) ? -fontsize/3 + ty - (fontsize-1)*i : -fontsize/3 + ty + (fontsize-1)*i;
+            })
+            .attr("fill", function (d, i){
+              var tt = color(i);
+              if(isNaN(tt.a)){tt.a = group.graphopacity;}
+              return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
+            });
+        }
       }
       gr
         .attr("transform", "translate(" + (-svgd.node().getBBox().x-box.x) + "," + (-svgd.node().getBBox().y-box.y) + ")");
