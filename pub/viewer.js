@@ -440,24 +440,59 @@ window.exports.viewer = (function () {
       } else {
         raddi(group.graphsize, group.progress, group.gap, group.thickness, rot, 0, redfl);
       }
+      var tranx = -box.x;
+      var trany = -box.y;
         gr
-          .attr("transform", "translate(" + (-box.x) + "," + (-box.y) + ")");
+          .attr("transform", "translate(" + (tranx) + "," + (trany) + ")");
+      if(group.image){
+        var bbox = svgd.node().getBBox();
+        d3.select(gr[0][0]).append("svg:image")
+          .attr("xlink:href", group.image.url)
+          .attr('width', group.image.width)
+          .attr('height', group.image.height)
+          .attr('x', function (){
+            switch(group.image.position.split(" ")[1]){
+              case "right":
+                return box.x + box.width;
+                break;
+              case "middle":
+                return -group.image.width/2;
+                break;
+              case "left":
+                return box.x - group.image.width;
+                break;
+            }
+            return -group.image.width/2;
+          })
+          .attr('y', function (){
+            switch(group.image.position.split(" ")[0]){
+              case "bottom":
+                return box.y + box.height;
+                break;
+              case "middle":
+                return -group.image.height/2;
+                break;
+              case "top":
+                return box.y -group.image.height;
+                break;
+            }
+          });
+      }
       if(group.labels != 'off'){
         var textwidth = 0;
         var textheight = 0;
         fontsize = (group.graphsize/(5));
-//for left: box.x, middle: 0, right: box.x + box.width
         var tx = 0;
         var ty = 0;
         switch(group.labels.split(" ")[0]){
           case "bottom":
-            ty = box.y+box.height;
+            ty = box.y + box.height + (fontsize-1)*group.goal.length;
             break;
           case "middle":
             ty = fontsize*(2/3) - (fontsize-1)*group.goal.length/2;
             break;
           case "top":
-            ty = box.y+fontsize;
+            ty = box.y - (fontsize-1)*group.goal.length/2;
             break;
         }
         switch(group.labels.split(" ")[1]){
@@ -517,24 +552,10 @@ window.exports.viewer = (function () {
               }
             }
           });
-        if(group.labels.endsWith("left")){
-          gr
-            .attr("transform", "translate(" + (textwidth-box.x) + "," + (-box.y) + ")");
-        } else if (group.labels.split(" ")[1] == "middle"){
-          textheight = text.node().getBBox().height*(group.goal.length);
-          if(group.labels.startsWith("top")){
-            gr.selectAll("path")
-              .attr("transform", "translate(" + 0 + "," + (textheight) + ")");
-          } else if(group.labels.startsWith("bottom")){
-            gr.selectAll("text")
-              .attr("transform", "translate(" + 0 + "," + (textheight) + ")");
-          }
-          if(box.width < textwidth){//center it.
-            gr
-              .attr("transform", "translate(" + (textwidth/2) + "," + (-box.y) + ")");
-          }
-        }
       } else {textwidth=0;}
+      console.log(svgd.node().getBBox());
+      gr
+        .attr("transform", "translate(" + (-svgd.node().getBBox().x-box.x) + "," + (-svgd.node().getBBox().y-box.y) + ")");
       svgd
         .attr("height", svgd.node().getBBox().height + "px")
         .attr("width", svgd.node().getBBox().width + "px");
