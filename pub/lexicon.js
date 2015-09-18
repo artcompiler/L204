@@ -40,5 +40,5 @@ exports.globalLexicon = {
     "secondary-bar" : { "tk": 0x01, "name": "SECBAR", "cls": "function", "length": 1, "arity": 1},
     "arc" : { "tk": 0x01, "name": "ARC", "cls": "function", "length": 2, "arity": 2},
     "text" : { "tk": 0x01, "name": "TEXT", "cls": "function", "length": 2, "arity": 2},
-    "image" : { "tk": 0x01, "name": "IMAGE", "cls": "function", "length": 5, "arity": 5},   
+    "image" : { "tk": 0x01, "name": "IMAGE", "cls": "function", "length": 5, "arity": 5},  
 }

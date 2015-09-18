@@ -479,8 +479,6 @@ window.exports.viewer = (function () {
           });
       }
       if(group.labels != 'off'){
-        var textwidth = 0;
-        var textheight = 0;
         fontsize = (group.graphsize/(5));
         var tx = 0;
         var ty = 0;
@@ -525,9 +523,6 @@ window.exports.viewer = (function () {
           .attr("text-anchor", (!tx) ? "middle" : (group.labels.endsWith('left')) ? "end" : "start")
           .style("font-size", fontsize+"px")
           .call(styles, group.style)
-          .each(function (d){
-            if(this.getBBox().width > textwidth){textwidth = this.getBBox().width;}
-          })
           .transition(function (d, i){return "radt"+i;})
           .duration(group.transition*1000)
           .tween("text", function (d, i, a){
@@ -552,8 +547,7 @@ window.exports.viewer = (function () {
               }
             }
           });
-      } else {textwidth=0;}
-      console.log(svgd.node().getBBox());
+      }
       gr
         .attr("transform", "translate(" + (-svgd.node().getBBox().x-box.x) + "," + (-svgd.node().getBBox().y-box.y) + ")");
       svgd
