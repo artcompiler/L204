@@ -491,7 +491,7 @@ window.exports.viewer = (function () {
             ty = fontsize*(2/3) - (fontsize-1)*group.goal.length/2;
             break;
           case "top":
-            ty = box.y - (fontsize-1)*group.goal.length;
+            ty = box.y - (fontsize-1)*(group.goal.length-1);
             break;
         }
         switch(group.labels.split(" ")[1]){
