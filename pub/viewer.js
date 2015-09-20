@@ -118,6 +118,7 @@ window.exports.viewer = (function () {
         var progress = group.progress;
         var prog = [];
         var point = [];
+        var it = [];
         divwidth = group.graphsize/group.div - group.divwidth;
         gr.append("rect")
             .attr("x", function (d, i){point[i] = group.divwidth/2; return point[i];})
@@ -131,6 +132,7 @@ window.exports.viewer = (function () {
               return "rgba("+tt.r+","+tt.g+","+tt.b+","+0+")";
             })
             .transition(function (d, i){return "bar"+i;})
+            .delay(function (d, i){it[i] = 0; return it[i]*group.transition*1000/(group.div*progress[i]/100);})
             .duration(function (d, i){return group.transition*1000/(group.div*progress[i]/100);})
             .attr("fill", function (d, i){
               prog[i] = progress[i]/100;
@@ -146,10 +148,11 @@ window.exports.viewer = (function () {
               if(isNaN(tt.a)){tt.a = group.graphopacity;}
               return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a*ch+")";
             })
-            .each("end", function (e, i){return divr(e, i);});
+            .each(function (e, i){return divr(e, i);});
         function divr(e, i){
           if(prog[i] > 0){
             point[i] += divwidth + group.divwidth;
+            it[i]++;
             d3.select(gr[0][i]).append("rect")
               .attr("x", function (d){return point[i];})//moved over
               .attr("y", function (d){ return (group.thickness+group.gap)*i;})//exactly the same
@@ -162,6 +165,7 @@ window.exports.viewer = (function () {
                 return "rgba("+tt.r+","+tt.g+","+tt.b+","+0+")";
               })
               .transition()
+              .delay(function (d){return it[i]*group.transition*1000/(group.div*progress[i]/100);})
               .duration(function (d){return group.transition*1000/(group.div*progress[i]/100);})
               .attr("fill", function (d){
                 var ch = (prog[i])*group.div;
@@ -173,7 +177,7 @@ window.exports.viewer = (function () {
                 if(isNaN(tt.a)){tt.a = group.graphopacity;}
                 return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a*ch+")";
               })
-              .each("end", function (e){return divr(e, i);});
+              .each(function (e){return divr(e, i);});
           }
         };
       } else {
@@ -254,6 +258,7 @@ window.exports.viewer = (function () {
         var prog = [];//should be independent to each function, ideally.
         var ir = [];
         var or = [];
+        var it = [];
         var back = gr.append("path")
           .attr("d", function (d, i){
             barc = d3.svg.arc()
@@ -293,7 +298,7 @@ window.exports.viewer = (function () {
             return "rgba("+tt.r+","+tt.g+","+tt.b+","+0+")";
           })
           .transition()
-          .delay(delay)
+          .delay(function (d, i){it[i] = 0; return delay + it[i]*group.transition*1000/(group.div*progress[i]/100);})
           .duration(function (d, i){return group.transition*1000/(group.div*progress[i]/100);})
           .attr("fill", function (d, i){
             prog[i] = progress[i]/100;
@@ -309,10 +314,11 @@ window.exports.viewer = (function () {
             if(isNaN(tt.a)){tt.a = group.graphopacity;}
             return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a*ch+")";
           })
-          .each("end", function (e, i){return divi(e, i);});
+          .each(function (e, i){return divi(e, i);});
         
         function divi (e, i){
           if(prog[i] > 0){
+            it[i]++;
             point[i] += divrad + group.divwidth*(Math.PI/180);//add divwidth degrees along with starting on the next divider
             d3.select(gr[0][i]).append("path")//make a new divider
               .attr("d", function (d, ind){
@@ -328,6 +334,7 @@ window.exports.viewer = (function () {
                 return "rgba("+tt.r+","+tt.g+","+tt.b+","+0+")";
               })
               .transition()
+              .delay(function (d){return delay + it[i]*group.transition*1000/(group.div*progress[i]/100);})
               .duration(function (d){return group.transition*1000/(group.div*progress[i]/100);})
               .attr("fill", function (d){
                 var ch = (prog[i])*group.div;
@@ -339,7 +346,7 @@ window.exports.viewer = (function () {
                 if(isNaN(tt.a)){tt.a = group.graphopacity;}
                 return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a*ch+")";
               })
-              .each("end", function (e){return divi(e, i);});
+              .each(function (e){return divi(e, i);});
           }
         };
         var progtest = false;
