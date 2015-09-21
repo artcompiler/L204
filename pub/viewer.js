@@ -62,12 +62,20 @@ window.exports.viewer = (function () {
               return (group.progress[i].toFixed(group.dec[i])+'%');
             } else if (group.texttype=='fraction'){
               return (group.current[i].toFixed(group.dec[i])+'/'+group.goal[i].toFixed(group.dec[i]));
-            } else {
-              return group.text
-                  .replace(/%percent/g, group.progress[i].toFixed(group.dec[i])+'%')
-                  .replace(/%fraction/g, group.current[i].toFixed(group.dec[i])+'/'+group.goal[i].toFixed(group.dec[i]))
-                  .replace(/%goal/g, group.goal[i].toFixed(group.dec[i]))
-                  .replace(/%value/g, group.current[i].toFixed(group.dec[i]));
+            } else {//run through the array
+              if (group.text.length == 1){
+                return group.text[0]
+                    .replace(/%percent/g, group.progress[i].toFixed(group.dec[i])+'%')
+                    .replace(/%fraction/g, group.current[i].toFixed(group.dec[i])+'/'+group.goal[i].toFixed(group.dec[i]))
+                    .replace(/%goal/g, group.goal[i].toFixed(group.dec[i]))
+                    .replace(/%value/g, group.current[i].toFixed(group.dec[i]));
+              } else {
+                return group.text[i]
+                    .replace(/%percent/g, group.progress[i].toFixed(group.dec[i])+'%')
+                    .replace(/%fraction/g, group.current[i].toFixed(group.dec[i])+'/'+group.goal[i].toFixed(group.dec[i]))
+                    .replace(/%goal/g, group.goal[i].toFixed(group.dec[i]))
+                    .replace(/%value/g, group.current[i].toFixed(group.dec[i]));
+              }
             }
           })
           .style("font-size", fontsize+"px")
@@ -91,11 +99,19 @@ window.exports.viewer = (function () {
               }
             } else {//custom text
               return function (t){
-                this.textContent = group.text
-                  .replace(/%percent/g, +iprog(t).toFixed(group.dec[i])+'%')
-                  .replace(/%fraction/g, (+(ival(t).toFixed(group.dec[i]))) + "/" + (+(igoal(t).toFixed(group.dec[i]))))
-                  .replace(/%goal/g, +(igoal(t).toFixed(group.dec[i])))
-                  .replace(/%value/g, +(ival(t).toFixed(group.dec[i])));
+                if(group.text.length == 1){
+                  this.textContent = group.text[0]
+                    .replace(/%percent/g, +iprog(t).toFixed(group.dec[i])+'%')
+                    .replace(/%fraction/g, (+(ival(t).toFixed(group.dec[i]))) + "/" + (+(igoal(t).toFixed(group.dec[i]))))
+                    .replace(/%goal/g, +(igoal(t).toFixed(group.dec[i])))
+                    .replace(/%value/g, +(ival(t).toFixed(group.dec[i])));
+                } else {
+                  this.textContent = group.text[i]
+                    .replace(/%percent/g, +iprog(t).toFixed(group.dec[i])+'%')
+                    .replace(/%fraction/g, (+(ival(t).toFixed(group.dec[i]))) + "/" + (+(igoal(t).toFixed(group.dec[i]))))
+                    .replace(/%goal/g, +(igoal(t).toFixed(group.dec[i])))
+                    .replace(/%value/g, +(ival(t).toFixed(group.dec[i])));
+                }
               }
             }
           });
@@ -521,11 +537,19 @@ window.exports.viewer = (function () {
             } else if (group.texttype=='fraction'){
               return (group.current[i].toFixed(group.dec[i])+'/'+group.goal[i].toFixed(group.dec[i]));
             } else {
-              return group.text
-                  .replace(/%percent/g, group.progress[i].toFixed(group.dec[i])+'%')
-                  .replace(/%fraction/g, group.current[i].toFixed(group.dec[i])+'/'+group.goal[i].toFixed(group.dec[i]))
-                  .replace(/%goal/g, group.goal[i].toFixed(group.dec[i]))
-                  .replace(/%value/g, group.current[i].toFixed(group.dec[i]));
+              if (group.text.length == 1){
+                return group.text[0]
+                    .replace(/%percent/g, group.progress[i].toFixed(group.dec[i])+'%')
+                    .replace(/%fraction/g, group.current[i].toFixed(group.dec[i])+'/'+group.goal[i].toFixed(group.dec[i]))
+                    .replace(/%goal/g, group.goal[i].toFixed(group.dec[i]))
+                    .replace(/%value/g, group.current[i].toFixed(group.dec[i]));
+              } else {
+                return group.text[i]
+                    .replace(/%percent/g, group.progress[i].toFixed(group.dec[i])+'%')
+                    .replace(/%fraction/g, group.current[i].toFixed(group.dec[i])+'/'+group.goal[i].toFixed(group.dec[i]))
+                    .replace(/%goal/g, group.goal[i].toFixed(group.dec[i]))
+                    .replace(/%value/g, group.current[i].toFixed(group.dec[i]));
+              }
             }
           })
           .attr("text-anchor", (!tx) ? "middle" : (group.labels.endsWith('left')) ? "end" : "start")
@@ -550,11 +574,19 @@ window.exports.viewer = (function () {
               }
             } else {//custom text
               return function (t){
-                this.textContent = group.text
-                  .replace(/%percent/g, +iprog(t).toFixed(group.dec[i])+'%')
-                  .replace(/%fraction/g, (+(ival(t).toFixed(group.dec[i]))) + "/" + (+(igoal(t).toFixed(group.dec[i]))))
-                  .replace(/%goal/g, +(igoal(t).toFixed(group.dec[i])))
-                  .replace(/%value/g, +(ival(t).toFixed(group.dec[i])));
+                if(group.text.length == 1){
+                  this.textContent = group.text[0]
+                    .replace(/%percent/g, +iprog(t).toFixed(group.dec[i])+'%')
+                    .replace(/%fraction/g, (+(ival(t).toFixed(group.dec[i]))) + "/" + (+(igoal(t).toFixed(group.dec[i]))))
+                    .replace(/%goal/g, +(igoal(t).toFixed(group.dec[i])))
+                    .replace(/%value/g, +(ival(t).toFixed(group.dec[i])));
+                } else {
+                  this.textContent = group.text[i]
+                    .replace(/%percent/g, +iprog(t).toFixed(group.dec[i])+'%')
+                    .replace(/%fraction/g, (+(ival(t).toFixed(group.dec[i]))) + "/" + (+(igoal(t).toFixed(group.dec[i]))))
+                    .replace(/%goal/g, +(igoal(t).toFixed(group.dec[i])))
+                    .replace(/%value/g, +(ival(t).toFixed(group.dec[i])));
+                }
               }
             }
           });//radius is fontsize/2

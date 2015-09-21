@@ -572,21 +572,34 @@ let translate = (function() {
     });
   }
   function text(node, options, resume){//0 = graph, 1 = string
+  	let res = [];
   	visit(node.elts[1], options, function (err1, val1) {//string
 			if(typeof val1 === "string"){//no point in an array given what we're actually doing with it.
-				let params = {
-					op: "default",
-					prop: "text",
-					val: val1
-				};
-				set(node, options, function (err, val) {
-					val.texttype = 'custom';
-					resume([].concat(err).concat(err1), val);
-				}, params);
+				res = [val1];
+
+			} else if(val1 instanceof Array){
+				val1.forEach(function (element, index){
+					if(typeof element === "string"){
+						res = res.concat(element);
+					} else {
+						err1 = err1.concat(error("Index "+index+" is not a string.", node.elts[1]));
+					}
+				});
 			} else {
-				err1 = err1.concat(error("Argument is not a string.", node.elts[1]));
-				resume([].concat(err1), val1);
+				err1 = err1.concat(error("Argument is not a string or array thereof.", node.elts[1]));
 			}
+			let params = {
+				op: "default",
+				prop: "text",
+				val: res
+			};
+			set(node, options, function (err, val) {
+				val.texttype = 'custom';
+				if(val.goal.length > res.length && res.length != 1){
+					err1 = err1.concat(error("Argument array is too small for the data.", node.elts[1]));
+				}
+				resume([].concat(err).concat(err1), val);
+			}, params);			
   	});
   }
   function bar(node, options, resume){
