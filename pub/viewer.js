@@ -17,7 +17,7 @@ window.exports.viewer = (function () {
           group = element;
         } else if(element.bg){
           if(typeof element.bg === "object" && element.bg && element.bg.r){
-            bgcol = 'rgb(+'+ (+element.bg.r) +','+ (+element.bg.g) +','+ (+element.bg.b) +')';
+            bgcol = 'rgb('+ (+element.bg.r) +','+ (+element.bg.g) +','+ (+element.bg.b) +')';
           } else {
             bgcol = element.bg;
           }
@@ -502,7 +502,7 @@ window.exports.viewer = (function () {
           });
       }
       if(group.labels != 'off'){
-        var textwidth = 0;
+        var textwidth = [];
         fontsize = (group.graphsize/(5));
         var tx = 0;
         var ty = 0;
@@ -555,8 +555,8 @@ window.exports.viewer = (function () {
           .attr("text-anchor", (!tx) ? "middle" : (group.labels.endsWith('left')) ? "end" : "start")
           .style("font-size", fontsize+"px")
           .call(styles, group.style)
-          .each(function (d){
-            if(this.getBBox().width > textwidth){textwidth = this.getBBox().width;}
+          .each(function (d, i){
+            textwidth[i] = this.getBBox().width;
           })//need this to put the key in the right place.
           .transition(function (d, i){return "radt"+i;})
           .duration(group.transition*1000)
@@ -595,11 +595,11 @@ window.exports.viewer = (function () {
             .attr('r', (fontsize)/3)
             .attr('cx', function (d, i){
               if (group.labels.endsWith("left")){//anchored left
-                return tx - textwidth - fontsize/3;
+                return tx - textwidth[i] - fontsize/3;
               } else if (group.labels.endsWith("right")){//anchored right
                 return tx - fontsize/3;
               } else {//anchored center
-                return tx - textwidth/2 - fontsize/3;
+                return tx - textwidth[i]/2 - fontsize/3;
               }
             })
             .attr('cy', function (d, i){
