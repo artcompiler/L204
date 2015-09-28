@@ -590,7 +590,7 @@ window.exports.viewer = (function () {
               }
             }
           });//radius is fontsize/2
-        if(group.key){
+        /*if(group.key){
           gr.append("circle")
             .attr('r', (fontsize)/3)
             .attr('cx', function (d, i){
@@ -614,6 +614,34 @@ window.exports.viewer = (function () {
             gr.selectAll("text")
               .attr("transform", "translate(" + (fontsize*2/3) + "," + 0 + ")");
             gr.selectAll("circle")
+              .attr("transform", "translate(" + (fontsize*2/3) + "," + 0 + ")");
+          }
+        }*/
+        if(group.key){
+          var labkey = gr.append("rect")
+            .attr('width', (fontsize)/2)
+            .attr('height', (fontsize)/2)
+            .attr('x', function (d, i){
+              if (group.labels.endsWith("left")){//anchored left
+                return tx - textwidth[i] - fontsize/2;
+              } else if (group.labels.endsWith("right")){//anchored right
+                return tx - fontsize/2;
+              } else {//anchored center
+                return tx - textwidth[i]/2 - fontsize/2;
+              }
+            })
+            .attr('y', function (d, i){
+              return (group.labels.startsWith("bottom")) ? -5*fontsize/8 + ty - (fontsize-1)*i : -5*fontsize/8 + ty + (fontsize-1)*i;
+            })
+            .attr("fill", function (d, i){
+              var tt = color(i);
+              if(isNaN(tt.a)){tt.a = group.graphopacity;}
+              return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
+            });
+          if(group.labels.endsWith("right")){
+            gr.selectAll("text")
+              .attr("transform", "translate(" + (fontsize*2/3) + "," + 0 + ")");
+            labkey
               .attr("transform", "translate(" + (fontsize*2/3) + "," + 0 + ")");
           }
         }
