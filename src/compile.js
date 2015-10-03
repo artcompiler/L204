@@ -436,11 +436,10 @@ let translate = (function() {
         gap: 'def',
         dec: [],
         arc: 360,
-        texttype: 'percent',
         style: [{key: "font-weight", val: 600}],
         rounding: 0,
         labels: 'off',
-        text: null,
+        text: ["%percent"],
       };
       if(typeof val === "string"){
       	val = JSON.parse(val);
@@ -594,7 +593,6 @@ let translate = (function() {
 				val: res
 			};
 			set(node, options, function (err, val) {
-				val.texttype = 'custom';
 				if(val.goal.length > res.length && res.length != 1){
 					err1 = err1.concat(error("Argument array is too small for the data.", node.elts[1]));
 				}
@@ -643,8 +641,8 @@ let translate = (function() {
   function fraction(node, options, resume){
     let params = {
       op: "default",
-      prop: "texttype",
-      val: "fraction"
+      prop: "text",
+      val: ["%fraction"]
     };
     set(node, options, function (err, val) {
       resume([].concat(err), val);

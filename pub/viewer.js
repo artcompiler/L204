@@ -58,24 +58,18 @@ window.exports.viewer = (function () {
           .attr("x", group.graphsize)
           .attr("y", function (d, i){return group.thickness + (group.thickness+group.gap)*i;})
           .text(function (d, i){
-            if(group.texttype=='percent'){
-              return (group.progress[i].toFixed(group.dec[i])+'%');
-            } else if (group.texttype=='fraction'){
-              return (group.current[i].toFixed(group.dec[i])+'/'+group.goal[i].toFixed(group.dec[i]));
-            } else {//run through the array
-              if (group.text.length == 1){
-                return group.text[0]
-                    .replace(/%percent/g, group.progress[i].toFixed(group.dec[i])+'%')
-                    .replace(/%fraction/g, group.current[i].toFixed(group.dec[i])+'/'+group.goal[i].toFixed(group.dec[i]))
-                    .replace(/%goal/g, group.goal[i].toFixed(group.dec[i]))
-                    .replace(/%value/g, group.current[i].toFixed(group.dec[i]));
-              } else {
-                return group.text[i]
-                    .replace(/%percent/g, group.progress[i].toFixed(group.dec[i])+'%')
-                    .replace(/%fraction/g, group.current[i].toFixed(group.dec[i])+'/'+group.goal[i].toFixed(group.dec[i]))
-                    .replace(/%goal/g, group.goal[i].toFixed(group.dec[i]))
-                    .replace(/%value/g, group.current[i].toFixed(group.dec[i]));
-              }
+            if (group.text.length == 1){
+              return group.text[0]
+                  .replace(/%percent/g, group.progress[i].toFixed(group.dec[i])+'%')
+                  .replace(/%fraction/g, group.current[i].toFixed(group.dec[i])+'/'+group.goal[i].toFixed(group.dec[i]))
+                  .replace(/%goal/g, group.goal[i].toFixed(group.dec[i]))
+                  .replace(/%value/g, group.current[i].toFixed(group.dec[i]));
+            } else {
+              return group.text[i]
+                  .replace(/%percent/g, group.progress[i].toFixed(group.dec[i])+'%')
+                  .replace(/%fraction/g, group.current[i].toFixed(group.dec[i])+'/'+group.goal[i].toFixed(group.dec[i]))
+                  .replace(/%goal/g, group.goal[i].toFixed(group.dec[i]))
+                  .replace(/%value/g, group.current[i].toFixed(group.dec[i]));
             }
           })
           .style("font-size", fontsize+"px")
@@ -89,15 +83,6 @@ window.exports.viewer = (function () {
             var iprog = d3.interpolate(0, group.progress[i]);
             var ival = d3.interpolate(0, group.current[i]);
             var igoal = d3.interpolate(0, group.goal[i]);
-            if(group.texttype == 'percent'){
-              return function (t){
-                this.textContent = (+(iprog(t).toFixed(group.dec[i]))) + "%";
-              }
-            } else if(group.texttype == 'fraction'){
-              return function (t){
-                this.textContent = (+(ival(t).toFixed(group.dec[i]))) + "/" + (+(igoal(t).toFixed(group.dec[i])));
-              }
-            } else {//custom text
               return function (t){
                 if(group.text.length == 1){
                   this.textContent = group.text[0]
@@ -113,7 +98,6 @@ window.exports.viewer = (function () {
                     .replace(/%value/g, +(ival(t).toFixed(group.dec[i])));
                 }
               }
-            }
           });
       }
       gr.append("rect")//one back rectangle per datum
@@ -532,24 +516,18 @@ window.exports.viewer = (function () {
           .attr("x", tx)
           .attr("y", function (d, i){return (group.labels.startsWith("bottom")) ? ty - (fontsize-1)*i : ty + (fontsize-1)*i;})
           .text(function (d, i){
-            if(group.texttype=='percent'){
-              return (group.progress[i].toFixed(group.dec[i])+'%');
-            } else if (group.texttype=='fraction'){
-              return (group.current[i].toFixed(group.dec[i])+'/'+group.goal[i].toFixed(group.dec[i]));
+            if (group.text.length == 1){
+              return group.text[0]
+                  .replace(/%percent/g, group.progress[i].toFixed(group.dec[i])+'%')
+                  .replace(/%fraction/g, group.current[i].toFixed(group.dec[i])+'/'+group.goal[i].toFixed(group.dec[i]))
+                  .replace(/%goal/g, group.goal[i].toFixed(group.dec[i]))
+                  .replace(/%value/g, group.current[i].toFixed(group.dec[i]));
             } else {
-              if (group.text.length == 1){
-                return group.text[0]
-                    .replace(/%percent/g, group.progress[i].toFixed(group.dec[i])+'%')
-                    .replace(/%fraction/g, group.current[i].toFixed(group.dec[i])+'/'+group.goal[i].toFixed(group.dec[i]))
-                    .replace(/%goal/g, group.goal[i].toFixed(group.dec[i]))
-                    .replace(/%value/g, group.current[i].toFixed(group.dec[i]));
-              } else {
-                return group.text[i]
-                    .replace(/%percent/g, group.progress[i].toFixed(group.dec[i])+'%')
-                    .replace(/%fraction/g, group.current[i].toFixed(group.dec[i])+'/'+group.goal[i].toFixed(group.dec[i]))
-                    .replace(/%goal/g, group.goal[i].toFixed(group.dec[i]))
-                    .replace(/%value/g, group.current[i].toFixed(group.dec[i]));
-              }
+              return group.text[i]
+                  .replace(/%percent/g, group.progress[i].toFixed(group.dec[i])+'%')
+                  .replace(/%fraction/g, group.current[i].toFixed(group.dec[i])+'/'+group.goal[i].toFixed(group.dec[i]))
+                  .replace(/%goal/g, group.goal[i].toFixed(group.dec[i]))
+                  .replace(/%value/g, group.current[i].toFixed(group.dec[i]));
             }
           })
           .attr("text-anchor", (!tx) ? "middle" : (group.labels.endsWith('left')) ? "end" : "start")
@@ -564,15 +542,6 @@ window.exports.viewer = (function () {
             var iprog = d3.interpolate(0, group.progress[i]);
             var ival = d3.interpolate(0, group.current[i]);
             var igoal = d3.interpolate(0, group.goal[i]);
-            if(group.texttype == 'percent'){
-              return function (t){
-                this.textContent = (+(iprog(t).toFixed(group.dec[i]))) + "%";
-              }
-            } else if(group.texttype == 'fraction'){
-              return function (t){
-                this.textContent = (+(ival(t).toFixed(group.dec[i]))) + "/" + (+(igoal(t).toFixed(group.dec[i])));
-              }
-            } else {//custom text
               return function (t){
                 if(group.text.length == 1){
                   this.textContent = group.text[0]
@@ -588,7 +557,6 @@ window.exports.viewer = (function () {
                     .replace(/%value/g, +(ival(t).toFixed(group.dec[i])));
                 }
               }
-            }
           });//radius is fontsize/2
         /*if(group.key){
           gr.append("circle")
