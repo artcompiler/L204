@@ -54,7 +54,7 @@ window.exports.viewer = (function () {
       str = str.substring(0, end);
       return +str * unit;
     };
-    var margin = {top: 0, right: 0, bottom: 0, left: 50};
+    var margin = {top: 0, right: 50, bottom: 0, left: 50};
     var width = graphs.width - margin.right - margin.left;
     var height = graphs.height - margin.top - margin.bottom;
     var i = 0;
@@ -70,6 +70,7 @@ window.exports.viewer = (function () {
       .range(graphs.color);
     var diagonal = d3.svg.diagonal()
       .projection(function(d) { return [d.y, d.x]});
+    var maxdepth = 0;
     var tree = d3.layout.tree()
       .children(function(d) {//use this to check for metadata. It'll be a little slower but it beats an entire different loop.
         var ch = null;
@@ -107,6 +108,7 @@ window.exports.viewer = (function () {
           });
           d.value = isNaN(d.value) ? 1 : d.value;
         }
+        if(maxdepth < d.depth){maxdepth = d.depth;}
         return ch;
       });
     var root = graphs.tree.constructor === Array ? d3.entries({A: graphs.tree})[0] : d3.entries(graphs.tree)[0];
@@ -115,7 +117,7 @@ window.exports.viewer = (function () {
     root = tree.nodes(root)[0];
     tree = d3.layout.tree()
       .size([height, width]);
-      
+
     function collapse(d){
       if(d.children){
         d._children = d.children;
@@ -132,7 +134,7 @@ window.exports.viewer = (function () {
       var nodes = tree.nodes(root).reverse();
       var links = tree.links(nodes);
 
-      nodes.forEach(function(d) {d.y = d.depth * 180; });
+      nodes.forEach(function(d) {d.y = d.depth * width/maxdepth; });
 
       var node = svg.selectAll("g.node")
         .data(nodes, function(d) { return d.id || (d.id = ++i); });
