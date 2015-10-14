@@ -1,19 +1,16 @@
 /* -*- Mode: js; js-indent-level: 2; indent-tabs-mode: nil; tab-width: 2 -*- */
 /* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
 /*
-   L201 compiler service.
+   L204 compiler service.
 */
-
 var http = require('http');
 var express = require('express')
 var app = express();
-
-app.set('port', (process.env.PORT || 5201));
+app.set('port', (process.env.PORT || 5204));
 app.use(express.static(__dirname + '/pub'));
 app.get('/', function(req, res) {
-  res.send("Hello, L201!");
+  res.send("Hello, L204!");
 });
-
 var compiler = require("./lib/compile.js");
 // Graffiti Code will load the version of itself that matches the graffiti
 // version. The compiler should use a version of itself that is compatible
@@ -37,11 +34,11 @@ app.get('/compile', function(req, res) {
     var obj = compiler.compile(src, function (err, val) {
       if (err.length) {
         res.send({
-          error: err
+          error: err,
         });
       } else {
         res.send({
-          data: val
+          data: val,
         });
       }
     });

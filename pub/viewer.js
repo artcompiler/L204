@@ -1,625 +1,240 @@
 /* -*- Mode: js; js-indent-level: 2; indent-tabs-mode: nil; tab-width: 2 -*- */
 /* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
 /* Copyright (c) 2015, Jeff Dyer, Art Compiler LLC */
+// This product includes color specifications and designs developed by Cynthia Brewer (http://colorbrewer.org/).
+
+
 window.exports.viewer = (function () {
   function update(el, obj, src, pool) {
-    var bgcol = 'white';
-    var group = null;
     obj = JSON.parse(obj);
-    if(!(obj.data instanceof(Array))){
-      obj.data = [obj.data];//has just one element
-    }
-    if (obj.error) {
-      str = "ERROR: " + obj.error;
+    var str;
+    var graphs = [];//array of graph objects, rather than a single object full of arrays.
+    if (obj.error && obj.error.length > 0) {
+      str = "ERROR";
     } else {
-      obj.data.forEach(function(element, index, array){
-        if(element.goal && element.current && element.progress){
-          group = element;
-        } else if(element.bg){
-          if(typeof element.bg === "object" && element.bg && element.bg.r){
-            bgcol = 'rgb('+ (+element.bg.r) +','+ (+element.bg.g) +','+ (+element.bg.b) +')';
-          } else {
-            bgcol = element.bg;
-          }
-        }
-      });
+      data = obj.data;
+      if(!(obj.data instanceof(Array))){
+        obj.data = [obj.data];
+      }//edge case for a single object because the parser likes to unwrap arrays.
     }
-    var y = 0;
-    var x = 0;
-    var r = 0;
-    var color = d3.scale.ordinal()
-      .range(group.graphcolor);
-    var backcolor = d3.scale.ordinal()
-      .range(group.backcolor);
-    var svgd = d3.select(el);
-    svgd.selectAll("g")
-      .remove();
-    var gr = svgd.selectAll('rect')
-      .data(group.progress)
-      .enter()
-      .append('g');//a group for each 
-    svgd.style("background-color", bgcol);
+    obj.data.forEach(function (element, index, array) {
+      if (typeof element === "object" && element.tree && typeof element.tree === "string") {
+        element.tree = JSON.parse(element.tree);
+        graphs = element;
+      }
+    });
+    //partition looks for children arrays starting from root and positions and scales based on number of children and their values.
     function styles(selection, these){
       these.forEach(function (p){
         selection
           .style(p.key, p.val);
       });
-    }
-    if(group.graphtype == 'bar'){
-      if(group.gap == 'def'){
-        group.gap = 5;
+    };
+    function getWidth(str){
+      var unit = 1;
+      var begin = str.indexOf("width=") + 7;  // width="
+      str = str.substring(begin);
+      var end = str.indexOf("px");
+      if (end < 0) {
+        end = str.indexOf("ex");
+        unit = 6;
       }
-      fontsize = group.thickness+1;
-      var textwidth = 0;
-      if(group.labels == 'off'){
-        fontsize = 0;
-      } else {
-        var text = gr.append("text")
-          .attr("x", group.graphsize)
-          .attr("y", function (d, i){return group.thickness + (group.thickness+group.gap)*i;})
-          .text(function (d, i){
-            if (group.text.length == 1){
-              return group.text[0]
-                  .replace(/%percent/g, group.progress[i].toFixed(group.dec[i])+'%')
-                  .replace(/%fraction/g, group.current[i].toFixed(group.dec[i])+'/'+group.goal[i].toFixed(group.dec[i]))
-                  .replace(/%goal/g, group.goal[i].toFixed(group.dec[i]))
-                  .replace(/%value/g, group.current[i].toFixed(group.dec[i]));
-            } else {
-              return group.text[i]
-                  .replace(/%percent/g, group.progress[i].toFixed(group.dec[i])+'%')
-                  .replace(/%fraction/g, group.current[i].toFixed(group.dec[i])+'/'+group.goal[i].toFixed(group.dec[i]))
-                  .replace(/%goal/g, group.goal[i].toFixed(group.dec[i]))
-                  .replace(/%value/g, group.current[i].toFixed(group.dec[i]));
-            }
-          })
-          .style("font-size", fontsize+"px")
-          .call(styles, group.style)
-          .each(function (d){
-            if(this.getBBox().width > textwidth){textwidth = this.getBBox().width;}
-          })
-          .transition(function (d, i){return "bart"+i;})
-          .duration(group.transition*1000)
-          .tween("text", function (d, i, a){
-            var iprog = d3.interpolate(0, group.progress[i]);
-            var ival = d3.interpolate(0, group.current[i]);
-            var igoal = d3.interpolate(0, group.goal[i]);
-              return function (t){
-                if(group.text.length == 1){
-                  this.textContent = group.text[0]
-                    .replace(/%percent/g, +iprog(t).toFixed(group.dec[i])+'%')
-                    .replace(/%fraction/g, (+(ival(t).toFixed(group.dec[i]))) + "/" + (+(igoal(t).toFixed(group.dec[i]))))
-                    .replace(/%goal/g, +(igoal(t).toFixed(group.dec[i])))
-                    .replace(/%value/g, +(ival(t).toFixed(group.dec[i])));
-                } else {
-                  this.textContent = group.text[i]
-                    .replace(/%percent/g, +iprog(t).toFixed(group.dec[i])+'%')
-                    .replace(/%fraction/g, (+(ival(t).toFixed(group.dec[i]))) + "/" + (+(igoal(t).toFixed(group.dec[i]))))
-                    .replace(/%goal/g, +(igoal(t).toFixed(group.dec[i])))
-                    .replace(/%value/g, +(ival(t).toFixed(group.dec[i])));
-                }
-              }
-          });
+      str = str.substring(0, end);
+      return +str * unit;
+    };
+    function getHeight(str) {
+      var unit = 1;
+      var begin = str.indexOf("height") + 8;  // height="
+      str = str.substring(begin);
+      var end = str.indexOf("px");
+      if (end < 0) {
+        end = str.indexOf("ex");
+        unit = 6;
       }
-      gr.append("rect")//one back rectangle per datum
-        .attr("x", 0)
-        .attr("y", function (d, i){ return (group.thickness+group.gap)*i;})//go down by this much - again, in the relative sense.
-        .attr("rx", group.rounding)
-        .attr("ry", group.rounding)
-        .attr("width", group.graphsize)
-        .attr("height", group.thickness)
-        .attr("fill", function (d, i){
-          var tt = backcolor(i);
-          if(isNaN(tt.a)){tt.a = group.backopacity;}
-          return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
-        });
-      //no transition for the back ones.
-      var clamp = [];
-      if(group.div){
-        var progress = group.progress;
-        var prog = [];
-        var point = [];
-        var it = [];
-        divwidth = group.graphsize/group.div - group.divwidth;
-        gr.append("rect")
-            .attr("x", function (d, i){point[i] = group.divwidth/2; return point[i];})
-            .attr("y", function (d, i){ return (group.thickness+group.gap)*i;})//this is much easier now that I know I can get the index
-            .attr("rx", group.rounding)
-            .attr("ry", group.rounding)
-            .attr("width", divwidth)
-            .attr("height", group.thickness)
-            .attr("fill", function (d, i){
-              var tt = color(i);
-              return "rgba("+tt.r+","+tt.g+","+tt.b+","+0+")";
-            })
-            .transition(function (d, i){return "bar"+i;})
-            .delay(function (d, i){it[i] = 0; return it[i]*group.transition*1000/(group.div*progress[i]/100);})
-            .duration(function (d, i){return group.transition*1000/(group.div*progress[i]/100);})
-            .attr("fill", function (d, i){
-              prog[i] = progress[i]/100;
-              if(prog[i]>1){
-                prog[i]=1;
-              }
-              var ch = (prog[i])*group.div;
-              if(ch>1){//if it doesn't fit in this divider
-                ch=1;
-              }
-              prog[i] -= (1/group.div);//decrease the running progress by the divider's size
-              var tt = color(i);
-              if(isNaN(tt.a)){tt.a = group.graphopacity;}
-              return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a*ch+")";
-            })
-            .each(function (e, i){return divr(e, i);});
-        function divr(e, i){
-          if(prog[i] > 0){
-            point[i] += divwidth + group.divwidth;
-            it[i]++;
-            d3.select(gr[0][i]).append("rect")
-              .attr("x", function (d){return point[i];})//moved over
-              .attr("y", function (d){ return (group.thickness+group.gap)*i;})//exactly the same
-              .attr("rx", group.rounding)
-              .attr("ry", group.rounding)
-              .attr("width", divwidth)
-              .attr("height", group.thickness)
-              .attr("fill", function (d){
-                var tt = color(i);
-                return "rgba("+tt.r+","+tt.g+","+tt.b+","+0+")";
-              })
-              .transition()
-              .delay(function (d){return it[i]*group.transition*1000/(group.div*progress[i]/100);})
-              .duration(function (d){return group.transition*1000/(group.div*progress[i]/100);})
-              .attr("fill", function (d){
-                var ch = (prog[i])*group.div;
-                if(ch>1){//if it doesn't fit in this divider
-                  ch=1;
-                }
-                prog[i] -= (1/group.div);//decrease the running progress by the divider's size
-                var tt = color(i);
-                if(isNaN(tt.a)){tt.a = group.graphopacity;}
-                return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a*ch+")";
-              })
-              .each(function (e){return divr(e, i);});
-          }
-        };
-      } else {
-        gr.append("rect")//one per datum, again.
-            .attr("x", 0)
-            .attr("y", function (d, i){ return (group.thickness+group.gap)*i;})//this is much easier now that I know I can get the index
-            .attr("rx", group.rounding)
-            .attr("ry", group.rounding)
-            .attr("width", function (d, i){
-              clamp = clamp.concat((group.current[i]/group.goal[i] > 1) ? 1 : group.current[i]/group.goal[i]);
-              return (group.rounding*2 < group.graphsize*clamp[i] ? group.rounding*2 : group.graphsize*clamp[i]);})
-            .attr("height", group.thickness)
-            .attr("fill", function (d, i){
-              var tt = color(i);
-              if(isNaN(tt.a)){tt.a = group.graphopacity;}
-              return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
-            })
-            .transition(function (d, i){return "bar"+i;})//if the function doesn't work figure out another naming convention
-            .duration(group.transition*1000)
-            .attr("width", function (d, i) {return group.graphsize*clamp[i];});
-      }
-      y = (group.thickness+group.gap)*group.goal.length - group.gap;
-      x = group.graphsize+textwidth;
-      var xt = 0;
-      var yt = 0;
-      var cos = Math.abs(Math.cos(group.rotation*(Math.PI/180)));
-      var sin = Math.abs(Math.sin(group.rotation*(Math.PI/180)));
-      if(group.rotation > 90){
-        yt = cos*y;
-        if(group.rotation < 270){
-          xt += cos*x;
-        } else {
-          yt -= cos*y;
-        }
-        if(group.rotation > 180){
-          yt += sin*x;
-        }
-      }
-      if(group.rotation < 180){
-        xt += sin*y;
-      }
-      gr
-        .attr("transform", "translate("+xt+","+yt+") rotate("+group.rotation+")");
-      svgd
-        .attr("height", svgd.node().getBBox().height + "px")
-        .attr("width", svgd.node().getBBox().width + "px");
-    } else if(group.graphtype == 'rad'){
-      if(group.innerradius){
-        var l = group.goal.length-1;
-        if(group.secondary){
-          for(var v = 0;v < group.goal.length;v++){
-            if(group.progress[v] > 100){
-              l++;//need more room for secondary bars.
-            }
-          }
-        }
-        group.thickness = (group.graphsize - group.innerradius)/((l));
-        if(group.gap == 'def'){
-          group.thickness = group.thickness/2;
-          group.gap = group.thickness;
-        } else {
-          group.thickness -= group.gap;
-        }
-      }
-      if(group.gap == 'def' && !group.innerradius){
-        group.gap = group.thickness;
-      }
-      var r = group.graphsize - group.thickness;
-      if(r<0){r=0;}
-      var rot = group.rotation*(Math.PI/180);
-      var redfl = group.secondary;
-      var radarc = group.arc*Math.PI/180;
-      var box = 0;
-      //Replace all instances of 360 with group.arc and Math.PI*2 with group.arc*Math.PI/180
-      function raddiv (size, progress, gap, thickness, rot, delay, redflag) {
-        var divrad = ((group.arc/group.div)-group.divwidth)*(Math.PI/180);//number and width of dividers remains the same for inners.
-        var point = [];
-        var prog = [];//should be independent to each function, ideally.
-        var ir = [];
-        var or = [];
-        var it = [];
-        var back = gr.append("path")
-          .attr("d", function (d, i){
-            barc = d3.svg.arc()
-              .startAngle(rot)
-              .endAngle(function (d, i){return (progress[i] <= 0) ? rot : rot+ radarc;})
-              .innerRadius(function (d, i){
-                if(!i){ir[i] = size-thickness;} else {
-                  ir[i] = ir[i-1] - (gap+thickness);
-                }//start with the initial size, decrease by gap and thickness each time
-                if(i && Math.floor(group.progress[i-1]/100) && group.secondary){ir[i] -= thickness;}//and this if there's a secondary bar.
-                return ir[i];})
-              .outerRadius(function (d, i){
-                if(!i){or[i] = size;} else {
-                  or[i] = or[i-1] - (gap+thickness);
-                }
-                if(i && Math.floor(group.progress[i-1]/100) && group.secondary){or[i] -= thickness;}
-                return or[i];});
-            return barc(d, i);              
-          })
-          .attr("fill", function (d, i){
-            var tt = backcolor(i);
-            if(isNaN(tt.a) || !redflag){tt.a = group.backopacity;}
-            return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
-          });
-        if(!box){box = back.node().getBBox();}
-        gr.append("path")
-          .attr("d", function (d, i){
-            curarc = d3.svg.arc()//just use this to set the desired points
-              .startAngle(function (d, i){point[i] = rot + group.divwidth*(Math.PI/360); return point[i];})
-              .endAngle(function (d, i){return point[i] + divrad;})
-              .innerRadius(function (d, i){return ir[i];})
-              .outerRadius(function (d, i){return or[i];});
-            return curarc(d, i);
-          })
-          .attr("fill", function (d, i){
-            var tt = color(i);
-            return "rgba("+tt.r+","+tt.g+","+tt.b+","+0+")";
-          })
-          .transition()
-          .delay(function (d, i){it[i] = 0; return delay + it[i]*group.transition*1000/(group.div*progress[i]/100);})
-          .duration(function (d, i){return group.transition*1000/(group.div*progress[i]/100);})
-          .attr("fill", function (d, i){
-            prog[i] = progress[i]/100;
-            if(prog[i]>1){
-              prog[i]=1;
-            }
-            var ch = (prog[i])*group.div;
-            if(ch>1){//larger than the divider
-              ch=1;
-            }
-            prog[i] -= (1/group.div);//decrease by divider fraction
-            var tt = color(i);
-            if(isNaN(tt.a)){tt.a = group.graphopacity;}
-            return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a*ch+")";
-          })
-          .each(function (e, i){return divi(e, i);});
-        
-        function divi (e, i){
-          if(prog[i] > 0){
-            it[i]++;
-            point[i] += divrad + group.divwidth*(Math.PI/180);//add divwidth degrees along with starting on the next divider
-            d3.select(gr[0][i]).append("path")//make a new divider
-              .attr("d", function (d, ind){
-                curarc = d3.svg.arc()
-                  .startAngle(function (d){return point[i];})
-                  .endAngle(function (d){return point[i] + divrad;})
-                  .innerRadius(function (d){return ir[i];})
-                  .outerRadius(function (d){return or[i];});//size can also vary for the second loop.
-                return curarc(d, ind);
-              })
-              .attr("fill", function (d){
-                var tt = color(i);
-                return "rgba("+tt.r+","+tt.g+","+tt.b+","+0+")";
-              })
-              .transition()
-              .delay(function (d){return delay + it[i]*group.transition*1000/(group.div*progress[i]/100);})
-              .duration(function (d){return group.transition*1000/(group.div*progress[i]/100);})
-              .attr("fill", function (d){
-                var ch = (prog[i])*group.div;
-                if(ch>1){//larger than the divider
-                  ch=1;
-                }
-                prog[i] -= (1/group.div);//decrease by divider fraction
-                var tt = color(i);
-                if(isNaN(tt.a)){tt.a = group.graphopacity;}
-                return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a*ch+")";
-              })
-              .each(function (e){return divi(e, i);});
-          }
-        };
-        var progtest = false;
-        var np = [];
-        for(var t = 0; t < progress.length; t++){
-          np[t] = progress[t] - 100;
-          if(np[t]<0){np[t]=0;}
-          if(!progtest && np[t] > 0){
-            progtest = true;
-          }
-        }
-        if(progtest){//figure out how to delay until when it actually hits 100.
-          if(redflag){
-            raddiv(size-thickness, np, gap, thickness, rot, delay+group.transition*800, false);
-          } else {
-            group.backopacity = 0;
-            raddiv(size, np, gap, thickness, rot, delay+group.transition*800, false);
-          }
-        }
-      };
-      function raddi (size, progress, gap, thickness, rot, delay, redflag){
-        var arcs = [];
-        var ir = [];
-        var or = [];
-        back = gr.append("path")
-          .attr("d", function (d, i){
-            barc = d3.svg.arc()
-              .startAngle(rot)
-              .endAngle(function (d, i){return (progress[i] <= 0) ? rot : rot+radarc;})
-              .innerRadius(function (d, i){
-                if(!i){ir[i] = size-thickness;} else {
-                  ir[i] = ir[i-1] - (gap+thickness);
-                }//start with the initial size, decrease by gap and thickness each time
-                if(i && Math.floor(group.progress[i-1]/100) && group.secondary){ir[i] -= thickness;}//and this if there's a secondary bar.
-                return ir[i];})
-              .outerRadius(function (d, i){
-                if(!i){or[i] = size;} else {
-                  or[i] = or[i-1] - (gap+thickness);
-                }
-                if(i && Math.floor(group.progress[i-1]/100) && group.secondary){or[i] -= thickness;}
-                return or[i];});
-            return barc(d, i);
-          })
-          .attr("fill", function (d, i){
-            var tt = backcolor(i);
-            if(isNaN(tt.a) || !redflag){tt.a = group.backopacity;}
-            return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
-          });
-        if(!box){box = back.node().getBBox();}
-        gr.append("path")
-          .attr("d", function (d, i){
-            arcs[i] = d3.svg.arc()
-              .startAngle(rot)
-              .endAngle(rot)
-              .innerRadius(function (d, i){return ir[i];})
-              .outerRadius(function (d, i){return or[i];});
-            return arcs[i](d, i);
-          })
-          .attr("fill", function (d, i){
-            var tt = color(i);
-            if(isNaN(tt.a)){tt.a = group.graphopacity;}
-            return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
-          })
-          .transition(function (d, i){return "rad"+i;})
-          .delay(delay)
-          .duration(group.transition*1000)
-          .attrTween("d", function (d, i){
-            var ccc = progress[i]/100;
-            if (ccc > 1){
-              ccc = 1;
-            }
-            var itp = d3.interpolate(rot, rot + (radarc)*ccc);
-
-            return function(t) {
-              return arcs[i].endAngle(itp(t))(d, i);
+      str = str.substring(0, end);
+      return +str * unit;
+    };
+    var margin = {top: 0, right: 0, bottom: 0, left: 50};
+    var width = graphs.width - margin.right - margin.left;
+    var height = graphs.height - margin.top - margin.bottom;
+    var i = 0;
+    var duration = 750;
+    var svgd = d3.select(el)
+      .attr("width", graphs.width)
+      .attr("height", graphs.height);
+    svgd.selectAll("g")
+      .remove();//clear each time
+    var svg = svgd.append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");//translate if you decide margins are necessary
+    var color = d3.scale.ordinal()
+      .range(graphs.color);
+    var diagonal = d3.svg.diagonal()
+      .projection(function(d) { return [d.y, d.x]});
+    var tree = d3.layout.tree()
+      .children(function(d) {//use this to check for metadata. It'll be a little slower but it beats an entire different loop.
+        var ch = null;
+        if(d.value !== null && typeof d.value === 'object'){//typical case, for objects
+          var temp = d3.entries(d.value);
+          ch = [];
+          temp.forEach(function (element, index) {
+            d.title = "";
+            d.link = "";
+            if(element.key === '_'){//the designated metadata definer.
+              d.title = element.value.title;//value is an object, even though 'value' may be part of it.
+              d.value = element.value.value;
+              d.name = element.value.name;
+              d.link = element.value.link;
+              d.image = element.value.image ? element.value.image
+                .replace(/&amp;/g, "&")
+                .replace(/&lt;/g, "<")
+                .replace(/&gt;/g, ">")
+                .replace(/&quot;/g, "'") : null;
+            } else {//add it to the array only if it isn't metadata.
+              ch.push(element);
             }
           });
-        var progtest = false;
-        var np = [];
-        for(var t = 0; t < progress.length; t++){
-          np[t] = progress[t] - 100;
-          if(np[t]<0){np[t]=0;}
-          if(!progtest && np[t] > 0){
-            progtest = true;
-          }
-        }
-        if(progtest){//figure out how to delay until when it actually hits 100.
-          if(redflag){
-            raddi(size-thickness, np, gap, thickness, rot, delay+group.transition*800, false);
-          } else {
-            group.backopacity = 0;
-            raddi(size, np, gap, thickness, rot, delay+group.transition*800, false);
-          }
-        }
-      };
-      if(group.div){//nonzero divider set
-        raddiv(group.graphsize, group.progress, group.gap, group.thickness, rot, 0, redfl);
-      } else {
-        raddi(group.graphsize, group.progress, group.gap, group.thickness, rot, 0, redfl);
-      }
-      var tranx = -box.x;
-      var trany = -box.y;
-        gr
-          .attr("transform", "translate(" + (tranx) + "," + (trany) + ")");
-      if(group.image){
-        var bbox = svgd.node().getBBox();
-        d3.select(gr[0][0]).append("svg:image")
-          .attr("xlink:href", group.image.url)
-          .attr('width', group.image.width)
-          .attr('height', group.image.height)
-          .attr('x', function (){
-            switch(group.image.position.split(" ")[1]){
-              case "right":
-                return box.x + box.width;
-                break;
-              case "middle":
-                return -group.image.width/2;
-                break;
-              case "left":
-                return box.x - group.image.width;
-                break;
-            }
-            return -group.image.width/2;
-          })
-          .attr('y', function (){
-            switch(group.image.position.split(" ")[0]){
-              case "bottom":
-                return box.y + box.height;
-                break;
-              case "middle":
-                return -group.image.height/2;
-                break;
-              case "top":
-                return box.y -group.image.height;
-                break;
-            }
+          d.value = isNaN(d.value) ? 1 : d.value;
+        } else if(d.value && d.value.constructor === Array){//note that unless this is an array OF OBJECTS it's invalid.
+          ch = [];
+          var temp = {
+            key: null,
+            value: null,
+          };
+          d.value.forEach(function (element, index) {
+            temp.key = index.toString();//give it it's index as a name.
+            temp.value = element;//technically works even if it's, say, an index of numbers (in which case they'll be leaves)
+            ch.push(temp);
           });
-      }
-      if(group.labels != 'off'){
-        var textwidth = [];
-        fontsize = (group.graphsize/(5));
-        var tx = 0;
-        var ty = 0;
-        switch(group.labels.split(" ")[0]){
-          case "bottom":
-            ty = box.y + box.height + (fontsize-1)*group.goal.length;
-            break;
-          case "middle":
-            ty = fontsize*(2/3) - (fontsize-1)*group.goal.length/2;
-            break;
-          case "top":
-            ty = box.y - (fontsize-1)*(group.goal.length-1);
-            break;
-        }
-        switch(group.labels.split(" ")[1]){
-          case "right":
-            tx = box.x+box.width;
-            break;
-          case "middle":
-            tx = 0;
-            break;
-          case "left":
-            tx = box.x;
-            break;
-        }
-        var text = gr.append("text")
-          .attr("x", tx)
-          .attr("y", function (d, i){return (group.labels.startsWith("bottom")) ? ty - (fontsize-1)*i : ty + (fontsize-1)*i;})
-          .text(function (d, i){
-            if (group.text.length == 1){
-              return group.text[0]
-                  .replace(/%percent/g, group.progress[i].toFixed(group.dec[i])+'%')
-                  .replace(/%fraction/g, group.current[i].toFixed(group.dec[i])+'/'+group.goal[i].toFixed(group.dec[i]))
-                  .replace(/%goal/g, group.goal[i].toFixed(group.dec[i]))
-                  .replace(/%value/g, group.current[i].toFixed(group.dec[i]));
-            } else {
-              return group.text[i]
-                  .replace(/%percent/g, group.progress[i].toFixed(group.dec[i])+'%')
-                  .replace(/%fraction/g, group.current[i].toFixed(group.dec[i])+'/'+group.goal[i].toFixed(group.dec[i]))
-                  .replace(/%goal/g, group.goal[i].toFixed(group.dec[i]))
-                  .replace(/%value/g, group.current[i].toFixed(group.dec[i]));
-            }
-          })
-          .attr("text-anchor", (!tx) ? "middle" : (group.labels.endsWith('left')) ? "end" : "start")
-          .style("font-size", fontsize+"px")
-          .call(styles, group.style)
-          .each(function (d, i){
-            textwidth[i] = this.getBBox().width;
-          })//need this to put the key in the right place.
-          .transition(function (d, i){return "radt"+i;})
-          .duration(group.transition*1000)
-          .tween("text", function (d, i, a){
-            var iprog = d3.interpolate(0, group.progress[i]);
-            var ival = d3.interpolate(0, group.current[i]);
-            var igoal = d3.interpolate(0, group.goal[i]);
-              return function (t){
-                if(group.text.length == 1){
-                  this.textContent = group.text[0]
-                    .replace(/%percent/g, +iprog(t).toFixed(group.dec[i])+'%')
-                    .replace(/%fraction/g, (+(ival(t).toFixed(group.dec[i]))) + "/" + (+(igoal(t).toFixed(group.dec[i]))))
-                    .replace(/%goal/g, +(igoal(t).toFixed(group.dec[i])))
-                    .replace(/%value/g, +(ival(t).toFixed(group.dec[i])));
-                } else {
-                  this.textContent = group.text[i]
-                    .replace(/%percent/g, +iprog(t).toFixed(group.dec[i])+'%')
-                    .replace(/%fraction/g, (+(ival(t).toFixed(group.dec[i]))) + "/" + (+(igoal(t).toFixed(group.dec[i]))))
-                    .replace(/%goal/g, +(igoal(t).toFixed(group.dec[i])))
-                    .replace(/%value/g, +(ival(t).toFixed(group.dec[i])));
-                }
-              }
-          });//radius is fontsize/2
-        /*if(group.key){
-          gr.append("circle")
-            .attr('r', (fontsize)/3)
-            .attr('cx', function (d, i){
-              if (group.labels.endsWith("left")){//anchored left
-                return tx - textwidth[i] - fontsize/3;
-              } else if (group.labels.endsWith("right")){//anchored right
-                return tx - fontsize/3;
-              } else {//anchored center
-                return tx - textwidth[i]/2 - fontsize/3;
-              }
-            })
-            .attr('cy', function (d, i){
-              return (group.labels.startsWith("bottom")) ? -fontsize/3 + ty - (fontsize-1)*i : -fontsize/3 + ty + (fontsize-1)*i;
-            })
-            .attr("fill", function (d, i){
-              var tt = color(i);
-              if(isNaN(tt.a)){tt.a = group.graphopacity;}
-              return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
-            });
-          if(group.labels.endsWith("right")){
-            gr.selectAll("text")
-              .attr("transform", "translate(" + (fontsize*2/3) + "," + 0 + ")");
-            gr.selectAll("circle")
-              .attr("transform", "translate(" + (fontsize*2/3) + "," + 0 + ")");
-          }
+          d.value = isNaN(d.value) ? 1 : d.value;
+        } /*else if(d.value !== 1){//not an array or object.
+          ch = [{
+            key: d.value,
+            value: 1,
+          }];
         }*/
-        if(group.key){
-          var labkey = gr.append("rect")
-            .attr('width', (fontsize)/2)
-            .attr('height', (fontsize)/2)
-            .attr('x', function (d, i){
-              if (group.labels.endsWith("left")){//anchored left
-                return tx - textwidth[i] - fontsize/2;
-              } else if (group.labels.endsWith("right")){//anchored right
-                return tx - fontsize/2;
-              } else {//anchored center
-                return tx - textwidth[i]/2 - fontsize/2;
-              }
-            })
-            .attr('y', function (d, i){
-              return (group.labels.startsWith("bottom")) ? -5*fontsize/8 + ty - (fontsize-1)*i : -5*fontsize/8 + ty + (fontsize-1)*i;
-            })
-            .attr("fill", function (d, i){
-              var tt = color(i);
-              if(isNaN(tt.a)){tt.a = group.graphopacity;}
-              return "rgba("+tt.r+","+tt.g+","+tt.b+","+tt.a+")";
-            });
-          if(group.labels.endsWith("right")){
-            gr.selectAll("text")
-              .attr("transform", "translate(" + (fontsize*2/3) + "," + 0 + ")");
-            labkey
-              .attr("transform", "translate(" + (fontsize*2/3) + "," + 0 + ")");
-          }
-        }
+        return ch;
+      });
+    var root = graphs.tree.constructor === Array ? d3.entries({A: graphs.tree})[0] : d3.entries(graphs.tree)[0];
+    root.x0 = height/2;
+    root.y0 = 0;
+    root = tree.nodes(root)[0];
+
+    tree = d3.layout.tree()
+      .size([height, width]);
+
+    function collapse(d){
+      if(d.children){
+        d._children = d.children;
+        d._children.forEach(collapse);
+        d.children = null;
       }
-      gr
-        .attr("transform", "translate(" + (-svgd.node().getBBox().x-box.x) + "," + (-svgd.node().getBBox().y-box.y) + ")");
-      svgd
-        .attr("height", svgd.node().getBBox().height + "px")
-        .attr("width", svgd.node().getBBox().width + "px");
-    }
+    };
+
+    root.children.forEach(collapse);
+    update(root);
+
+    function update(source) {
+      var nodes = tree.nodes(root).reverse();
+      var links = tree.links(nodes);
+
+      nodes.forEach(function(d) {d.y = d.depth * 180; });
+
+      var node = svg.selectAll("g.node")
+        .data(nodes, function(d) { return d.id || (d.id = ++i); });
+
+      var nodeEnter = node.enter().append("g")
+        .attr("class", "node")
+        .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")";})
+        .on("click", click)
+        .style("cursor", "pointer");
+
+      nodeEnter.append("circle")
+        .attr("r", 1e-6)
+        .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; })
+        .style("stroke", "steelblue")
+        .style("stroke-width", "1.5px");
+
+      nodeEnter.append("text")
+        //.attr("x", function(d) { return d.children || d._children ? -10 : 10; })
+        .attr("x", -10)
+        .attr("dy", ".35em")
+        //.attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
+        .attr("text-anchor", "end")
+        .text(function(d) {return d.key; })
+        .style("fill-opacity", 1e-6)
+        .style("font", "10px sans-serif");
+
+      nodeEnter.append("text")
+        .attr("x", 10)
+        .attr("dy", ".35em")
+        .attr("text-anchor", "start")
+        .text(function(d) {return d.children || d._children ? '' : d.value; })
+        .style("fill-opacity", 1e-6)
+        .style("font", "10px sans-serif");
+
+      var nodeUpdate = node.transition()
+        .duration(duration)
+        .attr("transform", function(d) {return "translate(" + d.y + "," + d.x + ")"; });
+
+      nodeUpdate.select("circle")
+        .attr("r", 4.5)
+        .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
+
+      nodeUpdate.selectAll("text")
+        .style("fill-opacity", 1);
+
+      var nodeExit = node.exit().transition()
+        .duration(duration)
+        .attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })
+        .remove();
+
+      nodeExit.select("circle")
+        .attr("r", 1e-6);
+
+      nodeExit.select("text")
+        .style("fill-opacity", 1e-6);
+
+      var link = svg.selectAll("path.link")
+        .data(links, function(d) { return d.target.id; });
+
+      link.enter().insert("path", "g")
+        .attr("class", "link")
+        .attr("d", function(d) {
+          var o = {x : source.x0, y: source.y0};
+          return diagonal({source: o, target: o});
+        })
+        .style("fill-opacity", 0)
+        .style("stroke", "#ccc")
+        .style("stroke-width", "1.5px");
+
+      link.transition()
+        .duration(duration)
+        .attr("d", diagonal);
+
+      link.exit().transition()
+        .duration(duration)
+        .attr("d", function(d) {
+          var o = {x : source.x, y: source.y};
+          return diagonal({source: o, target: o});
+        })
+        .remove();
+
+      nodes.forEach(function(d) {
+        d.x0 = d.x;
+        d.y0 = d.y;
+      });
+    };
+
+    function click(d) {
+      if (d.children) {
+        d._children = d.children;
+        d.children = null;
+      } else {
+        d.children = d._children;
+        d._children = null;
+      }
+      update(d);
+    };
   }
   function capture(el) {
     var mySVG = $(el).html();
