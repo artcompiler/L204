@@ -191,7 +191,7 @@ window.exports.viewer = (function () {
       nodeExit.select("circle")
         .attr("r", 1e-6);
 
-      nodeExit.select("text")
+      nodeExit.selectAll("text")
         .style("fill-opacity", 1e-6);
 
       var link = svg.selectAll("path.link")
