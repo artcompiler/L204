@@ -115,7 +115,7 @@ window.exports.viewer = (function () {
     root = tree.nodes(root)[0];
     tree = d3.layout.tree()
       .size([height, width]);
-    console.log(tree.size());
+      
     function collapse(d){
       if(d.children){
         d._children = d.children;
