@@ -19,4 +19,5 @@ exports.globalLexicon = {
     "rgba" : { "tk": 0x01, "name": "RGBA", "cls": "function", "length": 4, "arity": 4},
     "brewer" : { "tk": 0x01, "name": "BREWER", "cls": "function", "length": 1, "arity": 1},
     "tree" : { "tk": 0x01, "name": "TREE", "cls": "function", "length": 1, "arity": 1},
+    "expand" : { "tk": 0x01, "name": "EXPAND", "cls": "function", "length": 2, "arity": 2},
 }

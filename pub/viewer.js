@@ -106,22 +106,16 @@ window.exports.viewer = (function () {
             ch.push(temp);
           });
           d.value = isNaN(d.value) ? 1 : d.value;
-        } /*else if(d.value !== 1){//not an array or object.
-          ch = [{
-            key: d.value,
-            value: 1,
-          }];
-        }*/
+        }
         return ch;
       });
     var root = graphs.tree.constructor === Array ? d3.entries({A: graphs.tree})[0] : d3.entries(graphs.tree)[0];
     root.x0 = height/2;
     root.y0 = 0;
     root = tree.nodes(root)[0];
-
     tree = d3.layout.tree()
       .size([height, width]);
-
+    console.log(tree.size());
     function collapse(d){
       if(d.children){
         d._children = d.children;
@@ -129,8 +123,9 @@ window.exports.viewer = (function () {
         d.children = null;
       }
     };
-
-    root.children.forEach(collapse);
+    if(graphs.expanded !== "all"){
+      root.children.forEach(collapse);
+    }
     update(root);
 
     function update(source) {

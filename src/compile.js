@@ -425,26 +425,6 @@ let translate = (function() {
       resume([].concat(err), val);
     }, params);
   };
-  function horizontal(node, options, resume) {
-    let params = {
-      op: "default",
-      prop: "orientation",
-      val: "horizontal"
-    };
-    set(node, options, function (err, val) {
-      resume([].concat(err), val);
-    }, params);
-  };
-  function vertical(node, options, resume) {
-    let params = {
-      op: "default",
-      prop: "orientation",
-      val: "vertical"
-    };
-    set(node, options, function (err, val) {
-      resume([].concat(err), val);
-    }, params);
-  };
   function labels(node, options, resume) {
     var lab = [false, false, false];//labelling[0] is key, labelling [1] is value.
     visit(node.elts[1], options, function (err2, val2) {//parameter list
@@ -748,6 +728,18 @@ let translate = (function() {
       }
     });
   };
+  function expand(node, options, resume){
+    visit(node.elts[1], options, function (err1, val1) {
+      let params = {
+        op: "default",
+        prop: "expanded",
+        val: val1
+      };
+      set(node, options, function (err, val) {
+        resume([].concat(err), val);
+      }, params);
+    });
+  };
   function sunburst(node, options, resume){
     icicle(node, options, function (err, val){
       val.graphtype = 'sunburst';//just overwrite this
@@ -833,6 +825,7 @@ let translate = (function() {
     "RGBA" : rgba,
     "BREWER" : brewer,
     "TREE" : tree,
+    "EXPAND" : expand,
   };
   return translate;
 })();
