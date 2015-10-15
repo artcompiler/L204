@@ -122,19 +122,27 @@ window.exports.viewer = (function () {
       .size([height, width]);
 
     function traverse(d){
-      if(graphs.expanded.some(function(element){return element.startsWith(d.entry);})){
-        if(d.children){
+      if(d.children){
+        if(graphs.expanded.some(function(element){return element.startsWith(d.entry + '.') || element === d.entry;})){
           d.children.forEach(traverse);
-        }
-      } else {
-        if(d.children){
+        } else {
           d._children = d.children;
           d._children.forEach(collapse);
           d.children = null;
         }
       }
     };
-
+    function untraverse(d){//loop through. If it's collapsed, stop. if it's uncollapsed, check.
+      if(d.children){//uncollapsed
+        if(graphs.collapsed.some(function(element){return element === d.entry;})){//if it's actually the place we want.
+          d._children = d.children;
+          d._children.forEach(collapse);
+          d.children = null;
+        } else {
+          d.children.forEach(untraverse);
+        }
+      } //otherwise this area is collapsed and doesn't need further input
+    };
     function collapse(d){
       if(d.children){
         d._children = d.children;
@@ -145,8 +153,9 @@ window.exports.viewer = (function () {
     if(graphs.expanded[0] !== "all"){
       root.children.forEach(traverse);
     }
+    root.children.forEach(untraverse);
     update(root);
-
+    
     function update(source) {
       var nodes = tree.nodes(root).reverse();
       var links = tree.links(nodes);

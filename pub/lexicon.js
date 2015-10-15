@@ -13,11 +13,12 @@ exports.globalLexicon = {
     "data" : { "tk": 0x01, "name": "DATA", "cls": "function", "length": 1 , "arity": 1 },
     "width" : { "tk": 0x01, "name": "WIDTH", "cls": "function", "length": 2, "arity": 2},
     "height" : { "tk": 0x01, "name": "HEIGHT", "cls": "function", "length": 2, "arity": 2},
-    "color" : { "tk": 0x01, "name": "COLOR", "cls": "function", "length": 2, "arity": 2},
+    "color" : { "tk": 0x01, "nameß": "COLOR", "cls": "function", "length": 2, "arity": 2},
     "zoom" : { "tk": 0x01, "name": "ZOOM", "cls": "function", "length": 1, "arity": 1},
     "rgb" : { "tk": 0x01, "name": "RGB", "cls": "function", "length": 3, "arity": 3},
     "rgba" : { "tk": 0x01, "name": "RGBA", "cls": "function", "length": 4, "arity": 4},
     "brewer" : { "tk": 0x01, "name": "BREWER", "cls": "function", "length": 1, "arity": 1},
     "tree" : { "tk": 0x01, "name": "TREE", "cls": "function", "length": 1, "arity": 1},
     "expand" : { "tk": 0x01, "name": "EXPAND", "cls": "function", "length": 2, "arity": 2},
+    "collapse" : { "tk": 0x01, "name": "COLLAPSE", "cls": "function", "length": 2, "arity": 2},
 }
