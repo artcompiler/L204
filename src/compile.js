@@ -764,6 +764,21 @@ let translate = (function() {
       }, params);
     });
   };
+  function root(node, options, resume){
+    visit(node.elts[1], options, function (err1, val1) {
+      if(val1.constructor === Object || val1.constructor === Array){//anything else can be used
+        err1 = err1.concat(error("Argument must be a string.", node.elts[1]));
+      }
+      let params = {
+        op: "default",
+        prop: "root",
+        val: val1
+      };
+      set(node, options, function (err, val) {
+        resume([].concat(err), val);
+      }, params);
+    });
+  };
   function sunburst(node, options, resume){
     icicle(node, options, function (err, val){
       val.graphtype = 'sunburst';//just overwrite this
@@ -851,6 +866,7 @@ let translate = (function() {
     "TREE" : tree,
     "EXPAND" : expand,
     "COLLAPSE" : collapse,
+    "ROOT" : root,
   };
   return translate;
 })();

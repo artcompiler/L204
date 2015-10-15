@@ -54,7 +54,7 @@ window.exports.viewer = (function () {
       str = str.substring(0, end);
       return +str * unit;
     };
-    var margin = {top: 0, right: 50, bottom: 0, left: 50};
+    var margin = {top: 0, right: 120, bottom: 0, left: 120};
     var width = graphs.width - margin.right - margin.left;
     var height = graphs.height - margin.top - margin.bottom;
     var i = 0;
@@ -114,13 +114,21 @@ window.exports.viewer = (function () {
         return ch;
       });
     var root = graphs.tree.constructor === Array ? d3.entries({A: graphs.tree})[0] : d3.entries(graphs.tree)[0];
-    root.x0 = height/2;
-    root.y0 = 0;
     root.entry = root.key;
-    root = tree.nodes(root)[0];//use the entry to find the appropriate root when implementing root
+    root = tree.nodes(root);//use the entry to find the appropriate root when implementing root
     tree = d3.layout.tree()
       .size([height, width]);
-
+    var ind = 0;
+    if(!graphs.root || !root.some(function (element, index){
+      ind = index;//some ends when it's true, so.
+      return element.entry === graphs.root;
+    })){
+      ind = 0;
+    }
+    maxdepth -= root[ind].depth;
+    root = root[ind];
+    root.x0 = height/2;
+    root.y0 = 0;
     function traverse(d){
       if(d.children){
         if(graphs.expanded.some(function(element){return element.startsWith(d.entry + '.') || element === d.entry;})){
@@ -155,12 +163,12 @@ window.exports.viewer = (function () {
     }
     root.children.forEach(untraverse);
     update(root);
-    
+
     function update(source) {
       var nodes = tree.nodes(root).reverse();
       var links = tree.links(nodes);
 
-      nodes.forEach(function(d) {d.y = d.depth * width/maxdepth; });
+      //nodes.forEach(function(d) {d.y = d.depth * width/maxdepth; });
 
       var node = svg.selectAll("g.node")
         .data(nodes, function(d) { return d.id || (d.id = ++i); });
@@ -178,10 +186,8 @@ window.exports.viewer = (function () {
         .style("stroke-width", "1.5px");
 
       nodeEnter.append("text")
-        //.attr("x", function(d) { return d.children || d._children ? -10 : 10; })
         .attr("x", -10)
         .attr("dy", ".35em")
-        //.attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
         .attr("text-anchor", "end")
         .text(function(d) {return d.key; })
         .style("fill-opacity", 1e-6)
