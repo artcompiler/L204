@@ -91,6 +91,7 @@ window.exports.viewer = (function () {
                 .replace(/&gt;/g, ">")
                 .replace(/&quot;/g, "'") : null;
             } else {//add it to the array only if it isn't metadata.
+              element.entry = d.entry + '.' + element.key;
               ch.push(element);
             }
           });
@@ -104,6 +105,7 @@ window.exports.viewer = (function () {
           d.value.forEach(function (element, index) {
             temp.key = index.toString();//give it it's index as a name.
             temp.value = element;//technically works even if it's, say, an index of numbers (in which case they'll be leaves)
+            temp.entry = d.entry + '.' + temp.key;
             ch.push(temp);
           });
           d.value = isNaN(d.value) ? 1 : d.value;
@@ -114,9 +116,24 @@ window.exports.viewer = (function () {
     var root = graphs.tree.constructor === Array ? d3.entries({A: graphs.tree})[0] : d3.entries(graphs.tree)[0];
     root.x0 = height/2;
     root.y0 = 0;
-    root = tree.nodes(root)[0];
+    root.entry = root.key;
+    root = tree.nodes(root)[0];//use the entry to find the appropriate root when implementing root
     tree = d3.layout.tree()
       .size([height, width]);
+
+    function traverse(d){
+      if(graphs.expanded.some(function(element){return element.startsWith(d.entry);})){
+        if(d.children){
+          d.children.forEach(traverse);
+        }
+      } else {
+        if(d.children){
+          d._children = d.children;
+          d._children.forEach(collapse);
+          d.children = null;
+        }
+      }
+    };
 
     function collapse(d){
       if(d.children){
@@ -125,8 +142,8 @@ window.exports.viewer = (function () {
         d.children = null;
       }
     };
-    if(graphs.expanded !== "all"){
-      root.children.forEach(collapse);
+    if(graphs.expanded[0] !== "all"){
+      root.children.forEach(traverse);
     }
     update(root);
 

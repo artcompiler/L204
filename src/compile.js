@@ -399,6 +399,7 @@ let translate = (function() {
         width: 960,
         style: [],
         color: [{r:200, g:200, b:200, a:1}],
+        expanded: [],
         opacity: 1,
       };
       if(typeof val !== "string" && (typeof val !== "object" || !val)){
@@ -730,6 +731,11 @@ let translate = (function() {
   };
   function expand(node, options, resume){
     visit(node.elts[1], options, function (err1, val1) {
+      if(val1.constructor === Object){//anything else can be used
+        err1 = err1.concat(error("Argument must be a string or array.", node.elts[1]));
+      } else if(val1.constructor !== Array){
+        val1 = [val1];
+      }
       let params = {
         op: "default",
         prop: "expanded",
