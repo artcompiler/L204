@@ -168,7 +168,9 @@ window.exports.viewer = (function () {
       var nodes = tree.nodes(root).reverse();
       var links = tree.links(nodes);
 
-      //nodes.forEach(function(d) {d.y = d.depth * width/maxdepth; });
+      if(graphs.layout === 'fixed'){
+        nodes.forEach(function(d) {d.y = d.depth * width/maxdepth; });
+      }
 
       var node = svg.selectAll("g.node")
         .data(nodes, function(d) { return d.id || (d.id = ++i); });

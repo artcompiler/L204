@@ -22,4 +22,5 @@ exports.globalLexicon = {
     "expand" : { "tk": 0x01, "name": "EXPAND", "cls": "function", "length": 2, "arity": 2},
     "collapse" : { "tk": 0x01, "name": "COLLAPSE", "cls": "function", "length": 2, "arity": 2},
     "root" : { "tk": 0x01, "name": "ROOT", "cls": "function", "length": 2, "arity": 2},
+    "layout" : { "tk": 0x01, "name": "LAYOUT", "cls": "function", "length": 2, "arity": 2},
 }

@@ -401,6 +401,7 @@ let translate = (function() {
         color: [{r:200, g:200, b:200, a:1}],
         expanded: [],
         collapsed: [],
+        layout: 'fixed',
         opacity: 1,
       };
       if(typeof val !== "string" && (typeof val !== "object" || !val)){
@@ -743,7 +744,7 @@ let translate = (function() {
         val: val1
       };
       set(node, options, function (err, val) {
-        resume([].concat(err), val);
+        resume([].concat(err).concat(err1), val);
       }, params);
     });
   };
@@ -760,7 +761,7 @@ let translate = (function() {
         val: val1
       };
       set(node, options, function (err, val) {
-        resume([].concat(err), val);
+        resume([].concat(err).concat(err1), val);
       }, params);
     });
   };
@@ -775,8 +776,25 @@ let translate = (function() {
         val: val1
       };
       set(node, options, function (err, val) {
-        resume([].concat(err), val);
+        resume([].concat(err).concat(err1), val);
       }, params);
+    });
+  };
+  function layout(node, options, resume){
+    visit(node.elts[1], options, function (err1, val1){
+      if(val1 === 'fixed' || val1 === 'fit'){
+        let params = {
+          op: "default",
+          prop: "layout",
+          val: val1,
+        };
+        set(node, options, function (err, val) {
+          resume([].concat(err).concat(err1), val);
+        }, params);
+      } else {
+        err1 = err1.concat(error("Argument is not a valid layout option.", node.elts[1]));
+        resume([].concat(err1), val1);
+      }
     });
   };
   function sunburst(node, options, resume){
@@ -867,6 +885,7 @@ let translate = (function() {
     "EXPAND" : expand,
     "COLLAPSE" : collapse,
     "ROOT" : root,
+    "LAYOUT" : layout,
   };
   return translate;
 })();
