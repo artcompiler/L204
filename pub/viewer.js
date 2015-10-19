@@ -200,7 +200,7 @@ window.exports.viewer = (function () {
         .attr("dy", ".35em")
         .attr("text-anchor", "end")
         .text(function(d) {return d.key; })
-        .style("fill-opacity", 1e-6)
+        .style("opacity", 1e-6)
         .style("font", "10px sans-serif");
 
       nodeEnter.append("text")
@@ -208,8 +208,20 @@ window.exports.viewer = (function () {
         .attr("dy", ".35em")
         .attr("text-anchor", "start")
         .text(function(d) {return d.children || d._children ? '' : d.value; })
-        .style("fill-opacity", 1e-6)
+        .style("opacity", 1e-6)
         .style("font", "10px sans-serif");
+
+      if(graphs.zoom){
+        nodeEnter
+          .on("mouseover", function(d){
+            this.children[1].style.opacity = 1;
+            this.children[2].style.opacity = 1;
+          })
+          .on("mouseout", function(d){
+            this.children[1].style.opacity = 1e-6;
+            this.children[2].style.opacity = 1e-6;
+          });
+      }
 
       var nodeUpdate = node.transition()
         .duration(duration)
@@ -219,8 +231,10 @@ window.exports.viewer = (function () {
         .attr("r", 4.5)
         .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
 
-      nodeUpdate.selectAll("text")
-        .style("fill-opacity", 1);
+      if(!graphs.zoom){
+        nodeUpdate.selectAll("text")
+          .style("opacity", 1);
+      }
 
       var nodeExit = node.exit().transition()
         .duration(duration)
@@ -231,7 +245,7 @@ window.exports.viewer = (function () {
         .attr("r", 1e-6);
 
       nodeExit.selectAll("text")
-        .style("fill-opacity", 1e-6);
+        .style("opacity", 1e-6);
 
       var link = svg.selectAll("path.link")
         .data(links, function(d) { return d.target.id; });

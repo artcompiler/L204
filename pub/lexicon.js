@@ -14,7 +14,7 @@ exports.globalLexicon = {
     "width" : { "tk": 0x01, "name": "WIDTH", "cls": "function", "length": 2, "arity": 2},
     "height" : { "tk": 0x01, "name": "HEIGHT", "cls": "function", "length": 2, "arity": 2},
     "color" : { "tk": 0x01, "nameß": "COLOR", "cls": "function", "length": 2, "arity": 2},
-    "zoom" : { "tk": 0x01, "name": "ZOOM", "cls": "function", "length": 1, "arity": 1},
+    "mouseover-labels" : { "tk": 0x01, "name": "ZOOM", "cls": "function", "length": 1, "arity": 1},
     "rgb" : { "tk": 0x01, "name": "RGB", "cls": "function", "length": 3, "arity": 3},
     "rgba" : { "tk": 0x01, "name": "RGBA", "cls": "function", "length": 4, "arity": 4},
     "brewer" : { "tk": 0x01, "name": "BREWER", "cls": "function", "length": 1, "arity": 1},
