@@ -394,7 +394,6 @@ let translate = (function() {
   function data(node, options, resume) {
     visit(node.elts[0], options, function (err, val) {
       var ret = {
-        tree: val,
         style: [],
         color: [{r:200, g:200, b:200, a:1}],
         expanded: [],
@@ -402,11 +401,82 @@ let translate = (function() {
         layout: 'fixed',
         opacity: 1,
       };
-      if(typeof val !== "string" && (typeof val !== "object" || !val)){
-        err = err.concat(error("Data must be a URL.", node.elts[0]));
+      if(typeof val === "object" && val){
+        ret.tree = val;
+      } else if(typeof val === "string"){
+        get(node, options, function (err2, val2){
+          ret.tree = val2;
+          err = err.concat(err2);
+          resume([].concat(err), ret);
+        });
+        return;
+      } else {
+        err = err.concat(error("Data must be a valid object.", node.elts[0]));
       }
+      if(val instanceof Array && typeof val[0].key === "string" && typeof val[0].val !== "undefined"){
+        ret.tree = recordToJSON(val);
+      } 
       resume([].concat(err), ret);
-    })
+    });
+  };
+  function recordToJSON(val){
+    var ret = val;
+    if(val instanceof Array && typeof val[0].key === "string" && typeof val[0].val !== "undefined"){
+      ret = {};
+      val.forEach(function (element, index) {//each key/value pair
+        ret[element.key] = recordToJSON(element.val);//if it's an object itself
+      });
+    } else if(val instanceof Array){
+      ret = [];
+      val.forEach(function (element) {
+        console.log(element);
+        ret.push(isNaN(element) ? element : +element);
+      });
+    } else if(!isNaN(val)){
+      ret = +val;
+    }
+    return ret;
+  };
+  function get(node, options, resume){
+	  visit(node.elts[0], options, function (err, val) {
+      if(typeof val !== "string"){
+        err = err.concat(error("Input must be a URL.", node.elts[0]));
+      } else {
+        let protocol;
+        if (val.indexOf("https") >= 0){
+          protocol = https;
+        } else {
+          protocol = http;
+        }
+        protocol.get(val, function(res) {
+          var obj = '';
+
+          res.on('data', function(d) {
+            obj += d;
+          });
+
+          res.on('end', function() {
+            try {
+              var fin = JSON.parse(obj);
+            } catch(e){
+              err = err.concat(error("Attempt to parse JSON returned " + e, node.elts[0]));
+            } finally {
+              val = obj;
+              if(fin){
+                val = fin;
+                if (fin.error && fin.error.length > 0) {
+                  err = err.concat(error("Attempt to parse JSON returned " + fin.error, node.elts[0]));
+                }
+              }
+              resume([].concat(err), val);
+            }
+          });
+        }).on('error', function(e) {
+          err = err.concat(error("Attempt to get data returned " + e, node.elts[0]));
+          resume([].concat(err), val);
+        });
+      }
+	  })
   };
   function width(node, options, resume) {
     let params = {
@@ -692,41 +762,11 @@ let translate = (function() {
       if(typeof val !== "object" || !val || !val.tree){
         err = err.concat(error("Argument Data invalid.", node.elts[0]));
       } else {//have to make sure it's an object before you start assigning properties.
-        if(typeof val.tree === "string"){
-          let protocol;
-          if (val.tree.indexOf("https") >= 0) {
-            protocol = https;
-          } else {
-            protocol = http;
-          }
-          protocol.get(val.tree, function(res) {
-            var obj = '';
-
-            res.on('data', function(d) {
-              obj += d;
-            });
-
-            res.on('end', function() {
-              var fin = JSON.parse(obj);
-              val.tree = obj;
-              if(fin){
-                if (fin.error && fin.error.length > 0) {
-                  err = err.concat(error("Attempt to parse JSON returned" + fin.error, node.elts[0]));
-                }
-              }
-              resume([].concat(err), val);
-            });
-          }).on('error', function(e) {
-            err = err.concat(error("Attempt to get data returned" + e, node.elts[0]));
-            resume([].concat(err), val);
-          });
-        } else {
-          if(typeof val.tree !== "object") {
-            err = err.concat(error("Data is not a tree.", node.elts[0]));
-          }
-          resume([].concat(err), val);
+        if(typeof val.tree !== "object") {
+          err = err.concat(error("Data is not a tree.", node.elts[0]));
         }
       }
+      resume([].concat(err), val);
     });
   };
   function expand(node, options, resume){
@@ -872,6 +912,7 @@ let translate = (function() {
     "ADD" : add,
     "STYLE" : style,
     "DATA" : data,
+    "GET" : get,
     "WIDTH" : width,
     "HEIGHT" : height,
     "COLOR" : color,

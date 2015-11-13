@@ -11,6 +11,7 @@ exports.globalLexicon = {
     "add" : { "tk": 0x01, "name": "ADD", "cls": "function", "length": 2 , "arity": 2 },    
     "style" : { "tk": 0x01, "name": "STYLE", "cls": "function", "length": 2, "arity": 2 },
     "data" : { "tk": 0x01, "name": "DATA", "cls": "function", "length": 1 , "arity": 1 },
+    "get" : { "tk": 0x01, "name": "GET", "cls": "function", "length": 1 , "arity": 1 },
     "width" : { "tk": 0x01, "name": "WIDTH", "cls": "function", "length": 2, "arity": 2},
     "height" : { "tk": 0x01, "name": "HEIGHT", "cls": "function", "length": 2, "arity": 2},
     "color" : { "tk": 0x01, "nameß": "COLOR", "cls": "function", "length": 2, "arity": 2},
